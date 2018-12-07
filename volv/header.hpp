@@ -24,7 +24,7 @@ sf::Vector2f buffer(sf::Vector2f);
 
 const float pi = 3.14159f;
 const int NUMOFORGANISMS = 50;
-const int collideSquareSize = 100;
+const int collideSquareSize = 60;
 const float Xbuff = 30.f;
 const float Ybuff = 30.f;
 const int linesSize = 100;
@@ -35,8 +35,8 @@ extern int BREED_BASE;
 extern int CURRENT_ORGANISM;
 extern int CURRENT_FOOD;
 
-const int HEIGHT = 2500;
-const int WIDTH = 3900;
+const int HEIGHT = 500;
+const int WIDTH = 2000;
 
 class Organism;
 class Food;

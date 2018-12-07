@@ -6,8 +6,8 @@ int main()
 
 	// Define some constants
 
-	const int gameWidth = float(1000 * WIDTH / float(HEIGHT));
-	const int gameHeight = float(1000);
+	const int gameWidth = float(400 * WIDTH / float(HEIGHT));
+	const int gameHeight = float(400);
 	int framesBetweenAI = 5;
 	int FOODMULT = 1;
 	int currentAIframes = 0, secAI = 0, secFRAMES = 0;
@@ -48,7 +48,7 @@ int main()
 	//FOOD
 	if (true)
 	{
-		for (int i = 0; i < WIDTH*HEIGHT*FOODMULT / 10000; i++)
+		for (int i = 0; i < int(float(WIDTH*HEIGHT*FOODMULT) / 150000.f); i++)
 		{
 			sf::Vector2f pos((rand() % (WIDTH - 2 * int(Xbuff))) + Xbuff, (rand() % (HEIGHT - 2 * int(Ybuff))) + Ybuff);
 			pos = buffer(pos);
@@ -221,7 +221,7 @@ int main()
 				{
 					for (int j = 0; j < WIDTH / collideSquareSize + 1; j++)
 					{
-						//LL[i][j].drawFood(&window);
+						LL[i][j].drawFood(&window);
 						LL[i][j].drawOrganisms(&window);
 					}
 				}
