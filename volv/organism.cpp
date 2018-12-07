@@ -1,13 +1,15 @@
 #include "header.hpp"
 
-Organism::Organism(sf::Vector2f LOC, int newDNA[])
+Organism::Organism(sf::Vector2f LOC, int newDNA[], SimVars* newSimVars)
 {
+	simVars = newSimVars;
+
 	for (int i = 0; i < 10; i++)
 	{
 		DNA[i] = newDNA[i];
 	}
 
-	BORN = TIME;
+	BORN = simVars->TIME;
 	NEXT_MATE = BORN;
 	BREED = false;
 	LEADER = false;
@@ -93,8 +95,8 @@ Organism::Organism(sf::Vector2f LOC, int newDNA[])
 
 	setBody();
 
-	ID = CURRENT_ORGANISM;
-	CURRENT_ORGANISM++;
+	ID = simVars->CURRENT_ORGANISM;
+	simVars->CURRENT_ORGANISM++;
 
 	vision = float(DNA[0] + DNA[6] + DNA[8]) + 8 * radius;
 }
@@ -283,11 +285,12 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 				float distance = 1.2f*radius + float(rand() % 100);
 
 				sf::Vector2f pos(location.x + std::cosf(angle)*distance, location.y + std::sinf(angle)*distance);
-				pos = buffer(pos);
+				pos = buffer(pos, simVars);
 
-				Food* food = new Food(15 + DNA[2], pos);
+				Food* food = new Food(15 + DNA[2], pos, simVars);
+				food->simVars = simVars;
 
-				LL[int(pos.y / collideSquareSize)][int(pos.x / collideSquareSize)].insertFood(food);
+				LL[int(pos.y / simVars->COLLIDE_SQUARE_SIZE)][int(pos.x / simVars->COLLIDE_SQUARE_SIZE)].insertFood(food);
 				energy -= 0.03f*timeFactor;
 				bodyColor.a = 255.f*energy*2.f / maxEnergy;
 				basicBody.setFillColor(bodyColor);
@@ -297,7 +300,7 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 
 	if (LIFESTAGE < 2)
 	{
-		if (LIFESTAGE == 0 && TIME - BORN > LIFESPAN*0.05f)
+		if (LIFESTAGE == 0 && simVars->TIME - BORN > LIFESPAN*0.05f)
 		{
 			LIFESTAGE = 1;
 			bodyColor.b = (DNA[0] * 100 + DNA[0] * 10 + DNA[1]) / 5 + 40;
@@ -314,7 +317,7 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 
 			setBody();
 		}
-		else if (LIFESTAGE == 1 && TIME - BORN > LIFESPAN*0.8f)
+		else if (LIFESTAGE == 1 && simVars->TIME - BORN > LIFESPAN*0.8f)
 		{
 			LIFESTAGE = 2;
 			bodyColor.b = (DNA[0] * 100 + DNA[0] * 10 + DNA[1]) / 10 + 150;
@@ -341,9 +344,9 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 	{
 		for (int y = -1; y < 2; y++)
 		{
-			if (int(location.y / collideSquareSize + y) >= 0 && int(location.x / collideSquareSize) + x >= 0 && int(location.y / collideSquareSize + y) < HEIGHT / collideSquareSize + 1 && int(location.x / collideSquareSize + x) < WIDTH / collideSquareSize + 1)
+			if (int(location.y / simVars->COLLIDE_SQUARE_SIZE + y) >= 0 && int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x >= 0 && int(location.y / simVars->COLLIDE_SQUARE_SIZE + y) < simVars->HEIGHT / simVars->COLLIDE_SQUARE_SIZE + 1 && int(location.x / simVars->COLLIDE_SQUARE_SIZE + x) < simVars->WIDTH / simVars->COLLIDE_SQUARE_SIZE + 1)
 			{
-				for (std::vector<Organism*>::iterator it = LL[int(location.y / collideSquareSize + y)][int(location.x / collideSquareSize) + x].list.begin(); it != LL[int(location.y / collideSquareSize + y)][int(location.x / collideSquareSize) + x].list.end(); it++)
+				for (std::vector<Organism*>::iterator it = LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].list.begin(); it != LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].list.end(); it++)
 				{
 					if (ID != (*it)->ID)//If it is a different organism
 					{
@@ -463,7 +466,7 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 			{
 				//NO
 				//AM I NEAR SOMEONE SIMILAR?
-				if (org_sexiest != nullptr && NEXT_MATE < TIME)
+				if (org_sexiest != nullptr && NEXT_MATE < simVars->TIME)
 				{
 					//YES
 					//AM I YOUNG?
@@ -654,7 +657,7 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 
 			if (happiness > 100)// && org_sexiest->energy > org_sexiest->maxEnergy*float(org_sexiest->DNA[2] + org_sexiest->DNA[9] + org_sexiest->DNA[8] + org_sexiest->DNA[1]) / 45.f)
 			{
-				NEXT_MATE = TIME + (DNA[5] + (1 - DNA[7]) + DNA[3] + 10)*timeFactor*10.f;
+				NEXT_MATE = simVars->TIME + (DNA[5] + (1 - DNA[7]) + DNA[3] + 10)*timeFactor*10.f;
 				BREED = true;
 				energy *= 0.4f;
 				for (int n = 0; n < 10; n++)
@@ -676,11 +679,11 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 			roamAngle += float((rand() % 9) - 4)*0.02f;
 			if (roamAngle < 0.f)
 			{
-				roamAngle += 180.f / pi;
+				roamAngle += 180.f / M_PI;
 			}
-			if (roamAngle > 180.f / pi)
+			if (roamAngle > 180.f / M_PI)
 			{
-				roamAngle -= 180.f / pi;
+				roamAngle -= 180.f / M_PI;
 			}
 			if (foo_closest != nullptr)
 			{
@@ -695,11 +698,11 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 			roamAngle += float((rand() % 9) - 4)*0.1f;
 			if (roamAngle < 0.f)
 			{
-				roamAngle += 180.f / pi;
+				roamAngle += 180.f / M_PI;
 			}
-			if (roamAngle > 180.f / pi)
+			if (roamAngle > 180.f / M_PI)
 			{
-				roamAngle -= 180.f / pi;
+				roamAngle -= 180.f / M_PI;
 			}
 			GO_TO = sf::Vector2f(location.x + std::cosf(roamAngle)*100.f / 2.f, location.y + std::sinf(roamAngle)*100.f / 2.f);
 		}
@@ -757,27 +760,27 @@ void Organism::checkFoodVicinity(int x, int y, linkedList** LL)
 {
 	if (HUNGRY)
 	{
-		for (int k = 0; k < LL[int(location.y / collideSquareSize + y)][int(location.x / collideSquareSize) + x].foodList.size(); k++)
+		for (int k = 0; k < LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].foodList.size(); k++)
 		{
 			///////////////////////////////////////////////////////////////////
 			//DETERMINING THE ACTIONABLE FOOD, IF ANY
 			///////////////////////////////////////////////////////////////////
 
 			//Determine the closest food
-			if (foo_closest == nullptr || closest(foo_closest, LL[int(location.y / collideSquareSize + y)][int(location.x / collideSquareSize) + x].foodList[k]))
+			if (foo_closest == nullptr || closest(foo_closest, LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].foodList[k]))
 			{
 				if (Aggro)
 				{
-					if (LL[int(location.y / collideSquareSize + y)][int(location.x / collideSquareSize) + x].foodList[k]->killed)
+					if (LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].foodList[k]->killed)
 					{
-						foo_closest = LL[int(location.y / collideSquareSize + y)][int(location.x / collideSquareSize) + x].foodList[k];
+						foo_closest = LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].foodList[k];
 					}
 				}
 				else
 				{
-					if (!LL[int(location.y / collideSquareSize + y)][int(location.x / collideSquareSize) + x].foodList[k]->killed)
+					if (!LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].foodList[k]->killed)
 					{
-						foo_closest = LL[int(location.y / collideSquareSize + y)][int(location.x / collideSquareSize) + x].foodList[k];
+						foo_closest = LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].foodList[k];
 					}
 				}
 			}
@@ -850,7 +853,7 @@ bool Organism::eatFood(float collideFactor, linkedList** LL)
 int Organism::similarityUpdate(Organism* other)
 {
 	int breedSum = breedDiff(other);
-	if (breedSum < BREED_BASE && breedSum <= maxBreed - 1 && breedSum >= 0)
+	if (breedSum < simVars->BREED_BASE && breedSum <= maxBreed - 1 && breedSum >= 0)
 	{
 		maxBreed = breedSum;
 	}
@@ -860,7 +863,7 @@ int Organism::similarityUpdate(Organism* other)
 int Organism::mateFac(Organism* other)
 {
 	int breedSum = breedDiff(other);
-	if (breedSum < BREED_BASE && breedSum <= maxBreed && breedSum >= 0)
+	if (breedSum < simVars->BREED_BASE && breedSum <= maxBreed && breedSum >= 0)
 	{
 		return (maxBreed - breedSum);
 	}
@@ -962,7 +965,7 @@ bool Organism::scariest(Organism* incumbent, Organism* challenger)
 		int BS2;
 		BS2 = breedDiff(challenger);
 		//to you
-		if (BS2 > BREED_BASE || (BS2 > challenger->maxBreed && challenger->energy < 0.2f*challenger->maxEnergy) || challenger->state == ATTACK || challenger->virus)
+		if (BS2 > simVars->BREED_BASE || (BS2 > challenger->maxBreed && challenger->energy < 0.2f*challenger->maxEnergy) || challenger->state == ATTACK || challenger->virus)
 		{
 			if (incumbent == nullptr)
 			{
@@ -1001,24 +1004,24 @@ void Organism::move(linkedList** LL, float timefactor)
 		nudge = 0.00007f;
 	}
 
-	if (location.x < Xbuff)
+	if (location.x < simVars->Xbuff)
 	{
-		velocity.x += (Xbuff - location.x)*edge;
+		velocity.x += (simVars->Xbuff - location.x)*edge;
 		edgeCase = true;
 	}
-	if (location.y < Ybuff)
+	if (location.y < simVars->Ybuff)
 	{
-		velocity.y += (Ybuff - location.y)*edge;
+		velocity.y += (simVars->Ybuff - location.y)*edge;
 		edgeCase = true;
 	}
-	if (location.x > WIDTH - Xbuff)
+	if (location.x > simVars->WIDTH - simVars->Xbuff)
 	{
-		velocity.x -= (Xbuff - (WIDTH - location.x))*edge;
+		velocity.x -= (simVars->Xbuff - (simVars->WIDTH - location.x))*edge;
 		edgeCase = true;
 	}
-	if (location.y > HEIGHT - Ybuff)
+	if (location.y > simVars->HEIGHT - simVars->Ybuff)
 	{
-		velocity.y -= (Ybuff - (HEIGHT - location.y))*edge;
+		velocity.y -= (simVars->Ybuff - (simVars->HEIGHT - location.y))*edge;
 		edgeCase = true;
 	}
 
@@ -1040,19 +1043,19 @@ void Organism::move(linkedList** LL, float timefactor)
 	{
 		newLoc.y = radius;
 	}
-	if (newLoc.x + radius > WIDTH)
+	if (newLoc.x + radius > simVars->WIDTH)
 	{
-		newLoc.x = WIDTH - radius;
+		newLoc.x = simVars->WIDTH - radius;
 	}
-	if (newLoc.y + radius > HEIGHT)
+	if (newLoc.y + radius > simVars->HEIGHT)
 	{
-		newLoc.y = HEIGHT - radius;
+		newLoc.y = simVars->HEIGHT - radius;
 	}
 
-	if (location.x / collideSquareSize != (newLoc.x) / collideSquareSize || location.y / collideSquareSize != (newLoc.y) / collideSquareSize)
+	if (location.x / simVars->COLLIDE_SQUARE_SIZE != (newLoc.x) / simVars->COLLIDE_SQUARE_SIZE || location.y / simVars->COLLIDE_SQUARE_SIZE != (newLoc.y) / simVars->COLLIDE_SQUARE_SIZE)
 	{
-		LL[int(location.y / collideSquareSize)][int(location.x / collideSquareSize)].remove(this);
-		LL[int((newLoc.y) / collideSquareSize)][int((newLoc.x) / collideSquareSize)].insert(this);
+		LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE)][int(location.x / simVars->COLLIDE_SQUARE_SIZE)].remove(this);
+		LL[int((newLoc.y) / simVars->COLLIDE_SQUARE_SIZE)][int((newLoc.x) / simVars->COLLIDE_SQUARE_SIZE)].insert(this);
 	}
 
 	location = newLoc;
@@ -1062,16 +1065,16 @@ void Organism::move(linkedList** LL, float timefactor)
 		neg = true;
 	}
 
-	rotation = 90.f + 180.0f*atanf((velocity.y) / (velocity.x)) / pi + 180.f*neg;
+	rotation = 90.f + 180.0f*atanf((velocity.y) / (velocity.x)) / M_PI + 180.f*neg;
 
 	if (displayType == 0)
 	{
-		basicBody.setRotation(90.f + 180.0f*atanf((velocity.y) / (velocity.x)) / pi + 180.f*neg);
+		basicBody.setRotation(90.f + 180.0f*atanf((velocity.y) / (velocity.x)) / M_PI + 180.f*neg);
 		basicBody.setPosition(location);
 	}
 	else
 	{
-		convexBody.setRotation(180.0f*atanf((velocity.y) / (velocity.x)) / pi + 180.f*neg);
+		convexBody.setRotation(180.0f*atanf((velocity.y) / (velocity.x)) / M_PI + 180.f*neg);
 		convexBody.setPosition(location);
 	}
 }

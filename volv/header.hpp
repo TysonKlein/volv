@@ -10,7 +10,9 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
 #include <SFML/Window.hpp>
-#include <cmath>
+
+#define _USE_MATH_DEFINES
+#include <math.h>
 #include <ctime>
 #include <cstdlib>
 #include <iostream>
@@ -19,28 +21,28 @@
 //Globals
 ////////////////////////////////////////////////////////////
 
+struct SimVars
+{
+	int WIDTH, HEIGHT;
+	float Xbuff, Ybuff;
+	int LINE_SIZE;
+	int INIT_NUM_ORGANISMS;
+	bool DEVMODE;
+	int TIME;
+	int BREED_BASE;
+	int CURRENT_ORGANISM;
+	int CURRENT_FOOD;
+	int COLLIDE_SQUARE_SIZE;
+};
+
 float vectorDistance(sf::Vector2f V1, sf::Vector2f V2);
-sf::Vector2f buffer(sf::Vector2f);
+sf::Vector2f buffer(sf::Vector2f, SimVars* simVars);
+void initializeSimVars(SimVars* simVars);
 
-const float pi = 3.14159f;
-const int NUMOFORGANISMS = 50;
-const int collideSquareSize = 60;
-const float Xbuff = 30.f;
-const float Ybuff = 30.f;
-const int linesSize = 100;
-
-extern bool DEVMODE;
-extern int TIME;
-extern int BREED_BASE;
-extern int CURRENT_ORGANISM;
-extern int CURRENT_FOOD;
-
-const int HEIGHT = 500;
-const int WIDTH = 2000;
+enum AI_STATES { WANDER, FOOD, MATE, FLEE, ATTACK, PROTECT, FOLLOW, FLOCK };
 
 class Organism;
 class Food;
-enum AI_STATES { WANDER, FOOD, MATE, FLEE, ATTACK, PROTECT, FOLLOW, FLOCK };
 
 class linkedList
 {
@@ -58,17 +60,17 @@ public:
 	void drawOrganisms(sf::RenderWindow * window);
 	void drawFood(sf::RenderWindow * window);
 
+	SimVars * simVars;
 	std::vector<Organism*> list;
 	std::vector<Food*> foodList;
 	int X, Y;
 	sf::RectangleShape rect;
 };
 
-
 class Food
 {
 public:
-	Food(int val, sf::Vector2f pos);
+	Food(int val, sf::Vector2f pos, SimVars* newSimVars);
 	void setKilled();
 	void Draw(sf::RenderWindow* window);
 	void Eat(linkedList** LL);
@@ -76,6 +78,7 @@ public:
 	int value, ID;
 	sf::Vector2f location;
 	bool killed;
+	SimVars* simVars;
 private:
 	sf::RectangleShape rect;
 };
@@ -83,28 +86,25 @@ private:
 class Organism
 {
 public:
-	Organism(sf::Vector2f LOC, int newDNA[]);
+	Organism(sf::Vector2f LOC, int newDNA[], SimVars* newSimVars);
 
 	void makeSick(Organism* other);
 	void setBody();
 
 	float getLikability(int DNA2[]);
+	int similarityUpdate(Organism* other);
 
 	float Collides(Organism* other, sf::Vector2f pos);
 	float CollidesFood(sf::Vector2f pos1, sf::Vector2f pos2);
+	void checkFoodVicinity(int x, int y, linkedList** LL);
+	bool eatFood(float collideFactor, linkedList** LL);
 
 	sf::Vector2f getLocation();
-
 	float getRadius();
 
 	int breedDiff(Organism* other);
 
 	void AI(int me, linkedList** LL, float timeFactor);
-	void checkFoodVicinity(int x, int y, linkedList** LL);
-
-	bool eatFood(float collideFactor, linkedList** LL);
-
-	int similarityUpdate(Organism* other);
 
 	int mateFac(Organism* other);
 	int attackFac(Organism* other);
@@ -116,12 +116,10 @@ public:
 	bool scariest(Organism* incumbent, Organism* challenger);
 	bool closest(Food* incumbent, Food* challenger);
 
-	void move(linkedList** LL, float timefactor);
-
 	void die();
 
+	void move(linkedList** LL, float timefactor);
 	void changeVelocity(float timefactor);
-
 	void changeDesiredLocation(sf::Vector2f newLoc);
 
 	void Draw(sf::RenderWindow* window);
@@ -141,6 +139,7 @@ public:
 	Organism* org_tastiest;
 	Organism* org_flock;
 	Food* foo_closest;
+	SimVars* simVars;
 
 private:
 	int displayType;

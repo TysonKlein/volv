@@ -1,7 +1,9 @@
 #include "header.hpp"
 
-Food::Food(int val, sf::Vector2f pos)
+Food::Food(int val, sf::Vector2f pos, SimVars* newSimVars)
 {
+	simVars = newSimVars;
+
 	location = pos;
 	value = val;
 
@@ -11,8 +13,8 @@ Food::Food(int val, sf::Vector2f pos)
 	rect.setPosition(location);
 
 	killed = false;
-	ID = CURRENT_FOOD;
-	CURRENT_FOOD++;
+	ID = simVars->CURRENT_FOOD;
+	simVars->CURRENT_FOOD++;
 }
 void Food::setKilled()
 {
@@ -28,6 +30,6 @@ void Food::Draw(sf::RenderWindow* window)
 }
 void Food::Eat(linkedList** LL)
 {
-	LL[int(location.y / collideSquareSize)][int(location.x / collideSquareSize)].removeFood(this);
+	LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE)][int(location.x / simVars->COLLIDE_SQUARE_SIZE)].removeFood(this);
 	delete this;
 }

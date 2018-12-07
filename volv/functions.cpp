@@ -14,24 +14,40 @@ float vectorDistance(sf::Vector2f V1, sf::Vector2f V2)
 	return sqrt(x*x + y * y);
 }
 
-sf::Vector2f buffer(sf::Vector2f pos)
+sf::Vector2f buffer(sf::Vector2f pos, SimVars* simVars)
 {
 	sf::Vector2f newPos = pos;
-	if (pos.x < Xbuff)
+	if (pos.x < simVars->Xbuff)
 	{
-		newPos.x = Xbuff;
+		newPos.x = simVars->Xbuff;
 	}
-	else if (pos.x > WIDTH - Xbuff)
+	else if (pos.x > simVars->WIDTH - simVars->Xbuff)
 	{
-		newPos.x = WIDTH - Xbuff;
+		newPos.x = simVars->WIDTH - simVars->Xbuff;
 	}
-	if (pos.y < Ybuff)
+	if (pos.y < simVars->Ybuff)
 	{
-		newPos.y = Ybuff;
+		newPos.y = simVars->Ybuff;
 	}
-	else if (pos.y > HEIGHT - Ybuff)
+	else if (pos.y > simVars->HEIGHT - simVars->Ybuff)
 	{
-		newPos.y = HEIGHT - Ybuff;
+		newPos.y = simVars->HEIGHT - simVars->Ybuff;
 	}
 	return newPos;
+}
+
+void initializeSimVars(SimVars* simVars)
+{
+	simVars->HEIGHT = 1500;
+	simVars->WIDTH = 3000;
+	simVars->BREED_BASE = 9;
+	simVars->COLLIDE_SQUARE_SIZE = 60;
+	simVars->CURRENT_FOOD = 0;
+	simVars->CURRENT_ORGANISM = 0;
+	simVars->DEVMODE = false;
+	simVars->INIT_NUM_ORGANISMS = 120;
+	simVars->LINE_SIZE = 50;
+	simVars->TIME = 0;
+	simVars->Xbuff = 30;
+	simVars->Ybuff = 30;
 }

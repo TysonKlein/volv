@@ -32,15 +32,15 @@ void linkedList::kill(Organism* oldOrg, linkedList** LL) //Kill a specific organ
 		sf::Vector2f pos = oldOrg->location;
 		pos.x += float(rand() % 100) / 50.0f*oldOrg->radius - oldOrg->radius;
 		pos.y += float(rand() % 100) / 50.0f*oldOrg->radius - oldOrg->radius;
-		pos = buffer(pos);
-		Food* food = new Food(15 + oldOrg->DNA[2], pos);
+		pos = buffer(pos, simVars);
+		Food* food = new Food(15 + oldOrg->DNA[2], pos, simVars);
 		if (oldOrg->killed || rand() % 15 == 0)
 		{
 			food->setKilled();
 		}
-		LL[int(pos.y / collideSquareSize)][int(pos.x / collideSquareSize)].insertFood(food);
+		LL[int(pos.y / simVars->COLLIDE_SQUARE_SIZE)][int(pos.x / simVars->COLLIDE_SQUARE_SIZE)].insertFood(food);
 	}
-	if (LL[int(oldOrg->location.y / collideSquareSize)][int(oldOrg->location.x / collideSquareSize)].remove(oldOrg))
+	if (LL[int(oldOrg->location.y / simVars->COLLIDE_SQUARE_SIZE)][int(oldOrg->location.x / simVars->COLLIDE_SQUARE_SIZE)].remove(oldOrg))
 	{
 		oldOrg->die();
 	}
@@ -109,10 +109,10 @@ void linkedList::breed(Organism* oldOrg, linkedList** LL)
 
 	oldOrg->BREED = false;
 
-	Organism* org = new Organism(sf::Vector2f((oldOrg->breedLoc.x + oldOrg->location.x) / 2.f, (oldOrg->breedLoc.y + oldOrg->location.y) / 2.f), newDNA);
+	Organism* org = new Organism(sf::Vector2f((oldOrg->breedLoc.x + oldOrg->location.x) / 2.f, (oldOrg->breedLoc.y + oldOrg->location.y) / 2.f), newDNA, simVars);
 	org->maxBreed = parentA;
 	org->generation = oldOrg->generation + 1;
-	LL[int(org->location.y / collideSquareSize)][int(org->location.x / collideSquareSize)].insert(org);
+	LL[int(org->location.y / simVars->COLLIDE_SQUARE_SIZE)][int(org->location.x / simVars->COLLIDE_SQUARE_SIZE)].insert(org);
 }
 void linkedList::removeFood(Food* oldFood)
 {
@@ -140,7 +140,7 @@ void linkedList::drawOrganisms(sf::RenderWindow * window)
 	for (std::vector<Organism*>::iterator it = list.begin(); it != list.end(); it++)
 	{
 		(*it)->Draw(window);
-		if (DEVMODE)
+		if (simVars->DEVMODE)
 			(*it)->displayCollisions(window);
 	}
 }

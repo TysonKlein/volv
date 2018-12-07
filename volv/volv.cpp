@@ -4,56 +4,60 @@ int main()
 {
 	std::srand(static_cast<unsigned int>(std::time(NULL)));
 
+	SimVars simVars;
+	initializeSimVars(&simVars);
+
 	// Define some constants
 
-	const int gameWidth = float(400 * WIDTH / float(HEIGHT));
-	const int gameHeight = float(400);
-	int framesBetweenAI = 5;
+	int gameWidth = float(800 * simVars.WIDTH / float(simVars.HEIGHT));
+	int gameHeight = float(800);
+	int framesBetweenAI = 5, framesBetweenFood = 10;
 	int FOODMULT = 1;
-	int currentAIframes = 0, secAI = 0, secFRAMES = 0;
+	int currentAIframes = 0, secAI = 0, secFRAMES = 0, currentFoodFrames = 0;
 
 	Organism* org;
 	linkedList** LL;
 
-	LL = new linkedList*[HEIGHT / collideSquareSize + 1]();
+	LL = new linkedList*[simVars.HEIGHT / simVars.COLLIDE_SQUARE_SIZE + 1]();
 
-	for (int i = 0; i < HEIGHT / collideSquareSize + 1; i++)
+	for (int i = 0; i < simVars.HEIGHT / simVars.COLLIDE_SQUARE_SIZE + 1; i++)
 	{
-		LL[i] = new linkedList[WIDTH / collideSquareSize + 1]();
+		LL[i] = new linkedList[simVars.WIDTH / simVars.COLLIDE_SQUARE_SIZE + 1]();
 
-		for (int j = 0; j < WIDTH / collideSquareSize + 1; j++)
+		for (int j = 0; j < simVars.WIDTH / simVars.COLLIDE_SQUARE_SIZE + 1; j++)
 		{
 			LL[i][j].X = j;
 			LL[i][j].Y = i;
-			LL[i][j].rect.setSize(sf::Vector2f(collideSquareSize, collideSquareSize));
-			LL[i][j].rect.setPosition(sf::Vector2f(collideSquareSize*j, collideSquareSize*i));
+			LL[i][j].simVars = &simVars;
+			LL[i][j].rect.setSize(sf::Vector2f(simVars.COLLIDE_SQUARE_SIZE, simVars.COLLIDE_SQUARE_SIZE));
+			LL[i][j].rect.setPosition(sf::Vector2f(simVars.COLLIDE_SQUARE_SIZE*j, simVars.COLLIDE_SQUARE_SIZE*i));
 			LL[i][j].rect.setOutlineThickness(2);
 			LL[i][j].rect.setFillColor(sf::Color(rand() % 20, rand() % 20, rand() % 20));
 			LL[i][j].rect.setOutlineColor(sf::Color(200, 0, 0, 50));
 		}
 	}
 
-	for (int i = 0; i < NUMOFORGANISMS; i++)
+	for (int i = 0; i < simVars.INIT_NUM_ORGANISMS; i++)
 	{
 		int DNA[10];
 		for (int i = 0; i < 10; i++)
 		{
 			DNA[i] = rand() % 10;
 		}
-		Organism* org = new Organism(sf::Vector2f((rand() % (WIDTH - 2 * int(Xbuff))) + Xbuff, (rand() % (HEIGHT - 2 * int(Ybuff))) + Ybuff), DNA);
+		Organism* org = new Organism(sf::Vector2f((rand() % (simVars.WIDTH - 2 * int(simVars.Xbuff))) + simVars.Xbuff, (rand() % (simVars.HEIGHT - 2 * int(simVars.Ybuff))) + simVars.Ybuff), DNA, &simVars);
 		org->generation = 0;
-		LL[int(org->location.y / collideSquareSize)][int(org->location.x / collideSquareSize)].insert(org);
+		LL[int(org->location.y / simVars.COLLIDE_SQUARE_SIZE)][int(org->location.x / simVars.COLLIDE_SQUARE_SIZE)].insert(org);
 	}
 
 	//FOOD
 	if (true)
 	{
-		for (int i = 0; i < int(float(WIDTH*HEIGHT*FOODMULT) / 150000.f); i++)
+		for (int i = 0; i < int(float(simVars.WIDTH*simVars.HEIGHT*FOODMULT) / 150000.f); i++)
 		{
-			sf::Vector2f pos((rand() % (WIDTH - 2 * int(Xbuff))) + Xbuff, (rand() % (HEIGHT - 2 * int(Ybuff))) + Ybuff);
-			pos = buffer(pos);
-			Food* food = new Food(15 + rand() % 5, pos);
-			LL[int(pos.y / collideSquareSize)][int(pos.x / collideSquareSize)].insertFood(food);
+			sf::Vector2f pos((rand() % (simVars.WIDTH - 2 * int(simVars.Xbuff))) + simVars.Xbuff, (rand() % (simVars.HEIGHT - 2 * int(simVars.Ybuff))) + simVars.Ybuff);
+			pos = buffer(pos, &simVars);
+			Food* food = new Food(15 + rand() % 5, pos, &simVars);
+			LL[int(pos.y / simVars.COLLIDE_SQUARE_SIZE)][int(pos.x / simVars.COLLIDE_SQUARE_SIZE)].insertFood(food);
 		}
 	}
 
@@ -61,8 +65,8 @@ int main()
 	sf::RenderWindow window(sf::VideoMode(gameWidth, gameHeight, 32), "",
 		sf::Style::Default);
 	sf::View overView;
-	overView.setSize(WIDTH, HEIGHT);
-	overView.setCenter(WIDTH / 2, HEIGHT / 2);
+	overView.setSize(simVars.WIDTH, simVars.HEIGHT);
+	overView.setCenter(simVars.WIDTH / 2, simVars.HEIGHT / 2);
 	overView.setViewport(sf::FloatRect(0.f, 0.f, 1.f, 1.f));
 	window.setView(overView);
 
@@ -72,7 +76,7 @@ int main()
 
 	// Define the paddles properties
 	sf::Clock AITimer;
-	const sf::Time AITime = sf::seconds(1.0f / 30.0f);
+	const sf::Time AITime = sf::seconds(1.0f / 60.0f);
 	sf::Clock secTimer;
 	const sf::Time sec = sf::seconds(1.0f);
 	sf::Clock clock;
@@ -95,7 +99,7 @@ int main()
 			// Space key pressed: play
 			if ((event.type == sf::Event::KeyPressed) && (event.key.code == sf::Keyboard::Space))
 			{
-				DEVMODE = !DEVMODE;
+				simVars.DEVMODE = !simVars.DEVMODE;
 			}
 
 			if ((event.type == sf::Event::MouseButtonPressed) && (event.mouseButton.button == sf::Mouse::Left))
@@ -109,8 +113,8 @@ int main()
 						DNA[i] = 1 + rand() % 9;
 					}
 				}
-				org = new Organism(sf::Vector2f(sf::Mouse::getPosition(window).x*HEIGHT / gameHeight, sf::Mouse::getPosition(window).y*HEIGHT / gameHeight), DNA);
-				LL[int(org->location.y / collideSquareSize)][int(org->location.x / collideSquareSize)].insert(org);
+				org = new Organism(sf::Vector2f(sf::Mouse::getPosition(window).x*simVars.HEIGHT / gameHeight, sf::Mouse::getPosition(window).y*simVars.HEIGHT / gameHeight), DNA, &simVars);
+				LL[int(org->location.y / simVars.COLLIDE_SQUARE_SIZE)][int(org->location.x / simVars.COLLIDE_SQUARE_SIZE)].insert(org);
 			}
 			if ((event.type == sf::Event::MouseButtonPressed) && (event.mouseButton.button == sf::Mouse::Right))
 			{
@@ -123,8 +127,8 @@ int main()
 						DNA[i] = 0;
 					}
 				}
-				org = new Organism(sf::Vector2f(sf::Mouse::getPosition(window).x*HEIGHT / gameHeight, sf::Mouse::getPosition(window).y*HEIGHT / gameHeight), DNA);
-				LL[int(org->location.y / collideSquareSize)][int(org->location.x / collideSquareSize)].insert(org);
+				org = new Organism(sf::Vector2f(sf::Mouse::getPosition(window).x*simVars.HEIGHT / gameHeight, sf::Mouse::getPosition(window).y*simVars.HEIGHT / gameHeight), DNA, &simVars);
+				LL[int(org->location.y / simVars.COLLIDE_SQUARE_SIZE)][int(org->location.x / simVars.COLLIDE_SQUARE_SIZE)].insert(org);
 			}
 		}
 
@@ -140,18 +144,18 @@ int main()
 				secFRAMES = 0;
 			}
 
-			if (AITimer.getElapsedTime() > AITime || true)
+			if (AITimer.getElapsedTime() > AITime)
 			{
-				TIME++;
+				simVars.TIME++;
 				secFRAMES++;
 				AITimer.restart();
 
 				if (framesBetweenAI == currentAIframes)
 				{
 					secAI++;
-					for (int i = 0; i < HEIGHT / collideSquareSize + 1; i++)
+					for (int i = 0; i < simVars.HEIGHT / simVars.COLLIDE_SQUARE_SIZE + 1; i++)
 					{
-						for (int j = 0; j < WIDTH / collideSquareSize + 1; j++)
+						for (int j = 0; j < simVars.WIDTH / simVars.COLLIDE_SQUARE_SIZE + 1; j++)
 						{
 							for (std::vector<Organism*>::iterator it = LL[i][j].list.begin(); it != LL[i][j].list.end(); it++)
 							{
@@ -166,26 +170,34 @@ int main()
 					currentAIframes++;
 				}
 
-				for (int i = 0; i < WIDTH * HEIGHT * FOODMULT / 4000000 + 1; i++)
+				if (framesBetweenFood == currentFoodFrames)
 				{
-					sf::Vector2f pos(Xbuff + rand() % int(WIDTH - 2 * Xbuff), Ybuff + rand() % int(HEIGHT - 2 * Ybuff));
-					pos = buffer(pos);
-					bool spawn = true;
-
-					if (spawn)
+					for (int i = 0; i < simVars.WIDTH * simVars.HEIGHT * FOODMULT / 500000 + 1; i++)
 					{
-						Food* food = new Food(5 + rand() % 4, pos);
-						LL[int(pos.y / collideSquareSize)][int(pos.x / collideSquareSize)].insertFood(food);
+						sf::Vector2f pos(simVars.Xbuff + rand() % int(simVars.WIDTH - 2 * simVars.Xbuff), simVars.Ybuff + rand() % int(simVars.HEIGHT - 2 * simVars.Ybuff));
+						pos = buffer(pos, &simVars);
+						bool spawn = true;
+
+						if (spawn)
+						{
+							Food* food = new Food(5 + rand() % 4, pos, &simVars);
+							LL[int(pos.y / simVars.COLLIDE_SQUARE_SIZE)][int(pos.x / simVars.COLLIDE_SQUARE_SIZE)].insertFood(food);
+						}
 					}
+					currentFoodFrames = 0;
+				}
+				else
+				{
+					currentFoodFrames++;
 				}
 
-				for (int i = 0; i < HEIGHT / collideSquareSize + 1; i++)
+				for (int i = 0; i < simVars.HEIGHT / simVars.COLLIDE_SQUARE_SIZE + 1; i++)
 				{
-					for (int j = 0; j < WIDTH / collideSquareSize + 1; j++)
+					for (int j = 0; j < simVars.WIDTH / simVars.COLLIDE_SQUARE_SIZE + 1; j++)
 					{
 						for (int k = 0; k < LL[i][j].list.size(); k++)
 						{
-							if (LL[i][j].list[k]->vitality < 0.f || LL[i][j].list[k]->LIFESPAN <= TIME - LL[i][j].list[k]->BORN)
+							if (LL[i][j].list[k]->vitality < 0.f || LL[i][j].list[k]->LIFESPAN <= simVars.TIME - LL[i][j].list[k]->BORN)
 							{
 								LL[i][j].kill(LL[i][j].list[k], LL);
 							}
@@ -206,20 +218,20 @@ int main()
 				// Clear the window
 				window.clear(sf::Color(0, 0, 0));
 
-				if (DEVMODE)
+				if (simVars.DEVMODE)
 				{
-					for (int i = 0; i < HEIGHT / collideSquareSize + 1; i++)
+					for (int i = 0; i < simVars.HEIGHT / simVars.COLLIDE_SQUARE_SIZE + 1; i++)
 					{
-						for (int j = 0; j < WIDTH / collideSquareSize + 1; j++)
+						for (int j = 0; j < simVars.WIDTH / simVars.COLLIDE_SQUARE_SIZE + 1; j++)
 						{
 							LL[i][j].draw(&window);
 						}
 					}
 				}
 
-				for (int i = 0; i < HEIGHT / collideSquareSize + 1; i++)
+				for (int i = 0; i < simVars.HEIGHT / simVars.COLLIDE_SQUARE_SIZE + 1; i++)
 				{
-					for (int j = 0; j < WIDTH / collideSquareSize + 1; j++)
+					for (int j = 0; j < simVars.WIDTH / simVars.COLLIDE_SQUARE_SIZE + 1; j++)
 					{
 						LL[i][j].drawFood(&window);
 						LL[i][j].drawOrganisms(&window);
@@ -231,6 +243,5 @@ int main()
 			}
 		}
 	}
-
 	return EXIT_SUCCESS;
 }
