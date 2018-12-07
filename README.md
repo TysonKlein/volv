@@ -1,4 +1,4 @@
-<img src="https://github.com/TysonKlein/volv/blob/master/Readme/volv_logo.png" width="400" height="200">
+![volv](https://github.com/TysonKlein/volv/blob/master/Readme/volv_logo.png)
 
 volv is a portable, customizable, and educational evolution simulator, using simplified principles of evolutionary biology to show 'survival of the fittest' in action.
 
