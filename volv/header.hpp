@@ -10,6 +10,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
 #include <SFML/Window.hpp>
+#include "cxxopts.hpp"
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -26,18 +27,22 @@ struct SimVars
 	int WIDTH, HEIGHT;
 	float Xbuff, Ybuff;
 	int LINE_SIZE;
+	int FOODRATE;
 	int INIT_NUM_ORGANISMS;
-	bool DEVMODE;
 	int TIME;
 	int BREED_BASE;
 	int CURRENT_ORGANISM;
 	int CURRENT_FOOD;
 	int COLLIDE_SQUARE_SIZE;
+	int SEED;
+	bool DEVMODE;
+	bool FULLSCREEN;
+	bool UNLIMIED_FRAMERATE;
 };
 
 float vectorDistance(sf::Vector2f V1, sf::Vector2f V2);
 sf::Vector2f buffer(sf::Vector2f, SimVars* simVars);
-void initializeSimVars(SimVars* simVars);
+void initializeSimVars(int argc, char* argv[], SimVars* simVars);
 
 enum AI_STATES { WANDER, FOOD, MATE, FLEE, ATTACK, PROTECT, FOLLOW, FLOCK };
 

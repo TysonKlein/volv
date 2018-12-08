@@ -1,18 +1,17 @@
 #include "header.hpp"
 
-int main()
+int main(int argc, char* argv[])
 {
-	std::srand(static_cast<unsigned int>(std::time(NULL)));
-
 	SimVars simVars;
-	initializeSimVars(&simVars);
+	initializeSimVars(argc, argv, &simVars);
+	
+	std::srand(simVars.SEED);
 
 	// Define some constants
 
 	int gameWidth = float(800 * simVars.WIDTH / float(simVars.HEIGHT));
 	int gameHeight = float(800);
 	int framesBetweenAI = 5, framesBetweenFood = 10;
-	int FOODMULT = 1;
 	int currentAIframes = 0, secAI = 0, secFRAMES = 0, currentFoodFrames = 0;
 
 	Organism* org;
@@ -42,7 +41,10 @@ int main()
 		int DNA[10];
 		for (int i = 0; i < 10; i++)
 		{
-			DNA[i] = rand() % 10;
+			if (i == 9)
+				DNA[i] = 1 + rand() % 10;
+			else
+				DNA[i] = rand() % 10;
 		}
 		Organism* org = new Organism(sf::Vector2f((rand() % (simVars.WIDTH - 2 * int(simVars.Xbuff))) + simVars.Xbuff, (rand() % (simVars.HEIGHT - 2 * int(simVars.Ybuff))) + simVars.Ybuff), DNA, &simVars);
 		org->generation = 0;
@@ -52,12 +54,15 @@ int main()
 	//FOOD
 	if (true)
 	{
-		for (int i = 0; i < int(float(simVars.WIDTH*simVars.HEIGHT*FOODMULT) / 150000.f); i++)
+		for (int i = 0; i < int(float(simVars.WIDTH*simVars.HEIGHT*simVars.FOODRATE) / 150000.f); i++)
 		{
-			sf::Vector2f pos((rand() % (simVars.WIDTH - 2 * int(simVars.Xbuff))) + simVars.Xbuff, (rand() % (simVars.HEIGHT - 2 * int(simVars.Ybuff))) + simVars.Ybuff);
-			pos = buffer(pos, &simVars);
-			Food* food = new Food(15 + rand() % 5, pos, &simVars);
-			LL[int(pos.y / simVars.COLLIDE_SQUARE_SIZE)][int(pos.x / simVars.COLLIDE_SQUARE_SIZE)].insertFood(food);
+			if (rand() % 20 == 0)
+			{
+				sf::Vector2f pos((rand() % (simVars.WIDTH - 2 * int(simVars.Xbuff))) + simVars.Xbuff, (rand() % (simVars.HEIGHT - 2 * int(simVars.Ybuff))) + simVars.Ybuff);
+				pos = buffer(pos, &simVars);
+				Food* food = new Food(15 + rand() % 5, pos, &simVars);
+				LL[int(pos.y / simVars.COLLIDE_SQUARE_SIZE)][int(pos.x / simVars.COLLIDE_SQUARE_SIZE)].insertFood(food);
+			}
 		}
 	}
 
@@ -76,7 +81,7 @@ int main()
 
 	// Define the paddles properties
 	sf::Clock AITimer;
-	const sf::Time AITime = sf::seconds(1.0f / 60.0f);
+	const sf::Time AITime = sf::seconds(1.0f / 30.0f);
 	sf::Clock secTimer;
 	const sf::Time sec = sf::seconds(1.0f);
 	sf::Clock clock;
@@ -138,13 +143,12 @@ int main()
 
 			if (secTimer.getElapsedTime() > sec)
 			{
-				std::cout << secAI << " - " << secFRAMES << std::endl;
 				secTimer.restart();
 				secAI = 0;
 				secFRAMES = 0;
 			}
 
-			if (AITimer.getElapsedTime() > AITime)
+			if (AITimer.getElapsedTime() > AITime || simVars.UNLIMIED_FRAMERATE)
 			{
 				simVars.TIME++;
 				secFRAMES++;
@@ -172,14 +176,13 @@ int main()
 
 				if (framesBetweenFood == currentFoodFrames)
 				{
-					for (int i = 0; i < simVars.WIDTH * simVars.HEIGHT * FOODMULT / 500000 + 1; i++)
+					for (int i = 0; i < simVars.WIDTH * simVars.HEIGHT * simVars.FOODRATE / 500000 + 1; i++)
 					{
-						sf::Vector2f pos(simVars.Xbuff + rand() % int(simVars.WIDTH - 2 * simVars.Xbuff), simVars.Ybuff + rand() % int(simVars.HEIGHT - 2 * simVars.Ybuff));
-						pos = buffer(pos, &simVars);
-						bool spawn = true;
-
-						if (spawn)
+						if (rand() % 20 == 0)
 						{
+							sf::Vector2f pos(simVars.Xbuff + rand() % int(simVars.WIDTH - 2 * simVars.Xbuff), simVars.Ybuff + rand() % int(simVars.HEIGHT - 2 * simVars.Ybuff));
+							pos = buffer(pos, &simVars);
+							
 							Food* food = new Food(5 + rand() % 4, pos, &simVars);
 							LL[int(pos.y / simVars.COLLIDE_SQUARE_SIZE)][int(pos.x / simVars.COLLIDE_SQUARE_SIZE)].insertFood(food);
 						}

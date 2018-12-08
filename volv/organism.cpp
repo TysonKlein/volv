@@ -36,7 +36,7 @@ Organism::Organism(sf::Vector2f LOC, int newDNA[], SimVars* newSimVars)
 
 	radius = 1.1f*sqrt(10 + DNA[3] * (9 - DNA[5]) + DNA[2] * DNA[4] * DNA[8]);
 
-	maxSpeed = 3.f*float(DNA[2] + DNA[2] + (9 - DNA[7])) / (radius*radius);
+	maxSpeed = 1.2f*float(DNA[2] + DNA[2] + (9 - DNA[7])) / (radius*radius);
 
 	location = LOC;
 	desiredLocation = location;
@@ -786,7 +786,7 @@ void Organism::checkFoodVicinity(int x, int y, linkedList** LL)
 			}
 			///////////////////////////////////////////////////////////////////
 			///////////////////////////////////////////////////////////////////
-			if (k > 5)
+			if (k > 25 || foo_closest != nullptr)
 			{
 				return;
 			}
