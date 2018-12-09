@@ -16,6 +16,7 @@ int main(int argc, char* argv[])
 
 	Organism* org;
 	linkedList** LL;
+	linkedList drawList;
 
 	LL = new linkedList*[simVars.HEIGHT / simVars.COLLIDE_SQUARE_SIZE + 1]();
 
@@ -33,8 +34,13 @@ int main(int argc, char* argv[])
 			LL[i][j].rect.setOutlineThickness(2);
 			LL[i][j].rect.setFillColor(sf::Color(rand() % 20, rand() % 20, rand() % 20));
 			LL[i][j].rect.setOutlineColor(sf::Color(200, 0, 0, 50));
+			LL[i][j].drawList = &drawList;
 		}
 	}
+
+	drawList.X = 0;
+	drawList.Y = 0;
+	drawList.simVars = &simVars;
 
 	for (int i = 0; i < simVars.INIT_NUM_ORGANISMS; i++)
 	{
@@ -49,6 +55,7 @@ int main(int argc, char* argv[])
 		Organism* org = new Organism(sf::Vector2f((rand() % (simVars.WIDTH - 2 * int(simVars.Xbuff))) + simVars.Xbuff, (rand() % (simVars.HEIGHT - 2 * int(simVars.Ybuff))) + simVars.Ybuff), DNA, &simVars);
 		org->generation = 0;
 		LL[int(org->location.y / simVars.COLLIDE_SQUARE_SIZE)][int(org->location.x / simVars.COLLIDE_SQUARE_SIZE)].insert(org);
+		drawList.insert(org);
 	}
 
 	//FOOD
@@ -120,6 +127,7 @@ int main(int argc, char* argv[])
 				}
 				org = new Organism(sf::Vector2f(sf::Mouse::getPosition(window).x*simVars.HEIGHT / gameHeight, sf::Mouse::getPosition(window).y*simVars.HEIGHT / gameHeight), DNA, &simVars);
 				LL[int(org->location.y / simVars.COLLIDE_SQUARE_SIZE)][int(org->location.x / simVars.COLLIDE_SQUARE_SIZE)].insert(org);
+				drawList.insert(org);
 			}
 			if ((event.type == sf::Event::MouseButtonPressed) && (event.mouseButton.button == sf::Mouse::Right))
 			{
@@ -134,6 +142,7 @@ int main(int argc, char* argv[])
 				}
 				org = new Organism(sf::Vector2f(sf::Mouse::getPosition(window).x*simVars.HEIGHT / gameHeight, sf::Mouse::getPosition(window).y*simVars.HEIGHT / gameHeight), DNA, &simVars);
 				LL[int(org->location.y / simVars.COLLIDE_SQUARE_SIZE)][int(org->location.x / simVars.COLLIDE_SQUARE_SIZE)].insert(org);
+				drawList.insert(org);
 			}
 		}
 
@@ -183,7 +192,7 @@ int main(int argc, char* argv[])
 							sf::Vector2f pos(simVars.Xbuff + rand() % int(simVars.WIDTH - 2 * simVars.Xbuff), simVars.Ybuff + rand() % int(simVars.HEIGHT - 2 * simVars.Ybuff));
 							pos = buffer(pos, &simVars);
 							
-							Food* food = new Food(5 + rand() % 4, pos, &simVars);
+							Food* food = new Food(15 + rand() % 4, pos, &simVars);
 							LL[int(pos.y / simVars.COLLIDE_SQUARE_SIZE)][int(pos.x / simVars.COLLIDE_SQUARE_SIZE)].insertFood(food);
 						}
 					}
@@ -237,9 +246,11 @@ int main(int argc, char* argv[])
 					for (int j = 0; j < simVars.WIDTH / simVars.COLLIDE_SQUARE_SIZE + 1; j++)
 					{
 						LL[i][j].drawFood(&window);
-						LL[i][j].drawOrganisms(&window);
+						//LL[i][j].drawOrganisms(&window);
 					}
 				}
+
+				drawList.drawOrganisms(&window);
 
 				// Display things on screen
 				window.display();

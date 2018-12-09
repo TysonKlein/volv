@@ -67,6 +67,7 @@ public:
 
 	SimVars * simVars;
 	std::vector<Organism*> list;
+	linkedList* drawList;
 	std::vector<Food*> foodList;
 	int X, Y;
 	sf::RectangleShape rect;

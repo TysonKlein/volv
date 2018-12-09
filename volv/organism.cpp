@@ -16,13 +16,13 @@ Organism::Organism(sf::Vector2f LOC, int newDNA[], SimVars* newSimVars)
 	rotation = 0;
 	maxBreed = 10;
 
-	bodyColor.b = (DNA[0] * 100 + DNA[0] * 10 + DNA[1]) / 4;
-	bodyColor.g = ((9 - DNA[1]) * 100 + DNA[1] * 10 + DNA[8]) / 4;
-	bodyColor.r = (DNA[2] * 100 + DNA[2] * 10 + DNA[1]) / 4;
+	bodyColor.b = ((9-DNA[DNA[7]]) * 100 + DNA[DNA[1]] * 10 + (9 - DNA[DNA[2]])) / 4;
+	bodyColor.g = ((9 - DNA[8]) * 100 + DNA[1] * 10 + DNA[8]) / 4;
+	bodyColor.r = (DNA[DNA[0]] * 100 + DNA[2] * 10 + DNA[1]) / 4;
 	bodyColor.a = 160;
 
-	outlineColor.r = (DNA[6] * 100 + DNA[3] * 10 + DNA[1]) / 4;
-	outlineColor.g = (DNA[7] * 100 + DNA[6] * 10 + DNA[8]) / 4;
+	outlineColor.r = (DNA[DNA[6]] * 100 + DNA[3] * 10 + DNA[1]) / 4;
+	outlineColor.g = ((9-DNA[DNA[3]]) * 100 + DNA[6] * 10 + DNA[8]) / 4;
 	outlineColor.b = (DNA[5] * 100 + DNA[4] * 10 + DNA[1]) / 4;
 	outlineColor.a = 160;
 
@@ -34,9 +34,9 @@ Organism::Organism(sf::Vector2f LOC, int newDNA[], SimVars* newSimVars)
 
 	maxBreedingDiff = 10;
 
-	radius = 1.1f*sqrt(10 + DNA[3] * (9 - DNA[5]) + DNA[2] * DNA[4] * DNA[8]);
+	radius = 1.1f*sqrt(10 + DNA[3] * (9 - DNA[5]) + DNA[2] * DNA[4] * (9 - DNA[DNA[6]]));
 
-	maxSpeed = 1.2f*float(DNA[2] + DNA[2] + (9 - DNA[7])) / (radius*radius);
+	maxSpeed = 1.2f*float(DNA[2] + DNA[DNA[2]] + (9 - DNA[7])) / (radius*radius);
 
 	location = LOC;
 	desiredLocation = location;
@@ -45,7 +45,7 @@ Organism::Organism(sf::Vector2f LOC, int newDNA[], SimVars* newSimVars)
 	repel.y = 0;
 	happiness = 0.f;
 
-	attack = (35.f + DNA[2] + DNA[5] + DNA[6] - (9 - DNA[8]))*radius / 12.f;
+	attack = (35.f + DNA[2] + DNA[DNA[0]] + DNA[6] - (9 - DNA[8]))*radius*radius / 420.f;
 	if (attack < 1)
 	{
 		attack = 1;
@@ -53,27 +53,26 @@ Organism::Organism(sf::Vector2f LOC, int newDNA[], SimVars* newSimVars)
 
 	killed = false;
 
-	maxVitality = (DNA[6] + DNA[3] + DNA[7] + DNA[8] + 10) * radius / 5.f;
+	maxVitality = (DNA[6] + DNA[3] + DNA[7] + DNA[DNA[8]] + 10) * radius / 5.f;
 	vitality = maxVitality;
-	metabolism = 0.1f - float((DNA[9] + DNA[3] + DNA[5]) / 3)*0.007f;
+	metabolism = 0.1f - float((DNA[9] + DNA[DNA[3]] + (9-DNA[5])) / 3)*0.007f;
 	metabolism *= sqrt(sqrt(maxSpeed))*0.5f;
 	maxEnergy = maxVitality;
 	energy = 0.5*maxEnergy;
 	producer = false;
 	LIFESPAN = 50.f / metabolism * ((9 - DNA[1]) + DNA[3] + DNA[2] + 10);
 
-	if ((DNA[DNA[5]] + DNA[DNA[7]] + DNA[DNA[2]]) > 20)
+	if ((DNA[DNA[5]] + DNA[DNA[7]] + (9 - DNA[DNA[2]])) > 20)
 	{
 		Aggro = true;
 		displayType = 1;
 		maxVitality *= 1.3f;
-		energy = maxEnergy * 0.8f;
 		maxSpeed *= 1.3f;
 	}
 	else
 	{
 		Aggro = false;
-		attack /= 2.f;
+		attack /= 1.5f;
 		displayType = 0;
 	}
 
@@ -303,12 +302,12 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 		if (LIFESTAGE == 0 && simVars->TIME - BORN > LIFESPAN*0.05f)
 		{
 			LIFESTAGE = 1;
-			bodyColor.b = (DNA[0] * 100 + DNA[0] * 10 + DNA[1]) / 5 + 40;
-			bodyColor.g = (DNA[1] * 100 + DNA[1] * 10 + DNA[8]) / 5 + 40;
-			bodyColor.r = (DNA[2] * 100 + DNA[2] * 10 + DNA[1]) / 5 + 40;
+			bodyColor.b = ((9 - DNA[DNA[7]]) * 100 + DNA[DNA[1]] * 10 + (9 - DNA[DNA[2]])) / 5 + 40;
+			bodyColor.g = ((9 - DNA[8]) * 100 + DNA[1] * 10 + DNA[8]) / 5 + 40;
+			bodyColor.r = (DNA[DNA[0]] * 100 + DNA[2] * 10 + DNA[1]) / 5 + 40;
 
-			outlineColor.r = (DNA[6] * 100 + DNA[3] * 10 + DNA[1]) / 5 + 40;
-			outlineColor.g = (DNA[7] * 100 + DNA[6] * 10 + DNA[8]) / 5 + 40;
+			outlineColor.r = (DNA[DNA[6]] * 100 + DNA[3] * 10 + DNA[1]) / 5 + 40;
+			outlineColor.g = ((9 - DNA[DNA[3]]) * 100 + DNA[6] * 10 + DNA[8]) / 5 + 40;
 			outlineColor.b = (DNA[5] * 100 + DNA[4] * 10 + DNA[1]) / 5 + 40;
 
 			radius = radius * 1.5f;
@@ -320,13 +319,13 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 		else if (LIFESTAGE == 1 && simVars->TIME - BORN > LIFESPAN*0.8f)
 		{
 			LIFESTAGE = 2;
-			bodyColor.b = (DNA[0] * 100 + DNA[0] * 10 + DNA[1]) / 10 + 150;
-			bodyColor.g = (DNA[1] * 100 + DNA[1] * 10 + DNA[8]) / 10 + 150;
-			bodyColor.r = (DNA[2] * 100 + DNA[2] * 10 + DNA[1]) / 10 + 150;
+			bodyColor.b = ((9 - DNA[DNA[7]]) * 100 + DNA[DNA[1]] * 10 + (9 - DNA[DNA[2]])) / 10 + 140;
+			bodyColor.g = ((9 - DNA[8]) * 100 + DNA[1] * 10 + DNA[8]) / 10 + 140;
+			bodyColor.r = (DNA[DNA[0]] * 100 + DNA[2] * 10 + DNA[1]) / 10 + 140;
 
-			outlineColor.r = (DNA[6] * 100 + DNA[3] * 10 + DNA[1]) / 5 + 50;
-			outlineColor.g = (DNA[7] * 100 + DNA[6] * 10 + DNA[8]) / 5 + 50;
-			outlineColor.b = (DNA[5] * 100 + DNA[4] * 10 + DNA[1]) / 5 + 50;
+			outlineColor.r = (DNA[DNA[6]] * 100 + DNA[3] * 10 + DNA[1]) / 10 + 140;
+			outlineColor.g = ((9 - DNA[DNA[3]]) * 100 + DNA[6] * 10 + DNA[8]) / 10 + 140;
+			outlineColor.b = (DNA[5] * 100 + DNA[4] * 10 + DNA[1]) / 10 + 140;
 
 			maxSpeed = maxSpeed / 1.2f;
 
@@ -657,7 +656,7 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 
 			if (happiness > 100)// && org_sexiest->energy > org_sexiest->maxEnergy*float(org_sexiest->DNA[2] + org_sexiest->DNA[9] + org_sexiest->DNA[8] + org_sexiest->DNA[1]) / 45.f)
 			{
-				NEXT_MATE = simVars->TIME + (DNA[5] + (1 - DNA[7]) + DNA[3] + 10)*timeFactor*10.f;
+				NEXT_MATE = simVars->TIME + (DNA[5] + (1 - DNA[7]) + DNA[3] + 10)*timeFactor*3.f;
 				BREED = true;
 				energy *= 0.4f;
 				for (int n = 0; n < 10; n++)
@@ -786,7 +785,7 @@ void Organism::checkFoodVicinity(int x, int y, linkedList** LL)
 			}
 			///////////////////////////////////////////////////////////////////
 			///////////////////////////////////////////////////////////////////
-			if (k > 25 || foo_closest != nullptr)
+			if (k > 25 && foo_closest == nullptr)
 			{
 				return;
 			}

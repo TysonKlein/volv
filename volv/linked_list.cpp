@@ -42,6 +42,7 @@ void linkedList::kill(Organism* oldOrg, linkedList** LL) //Kill a specific organ
 	}
 	if (LL[int(oldOrg->location.y / simVars->COLLIDE_SQUARE_SIZE)][int(oldOrg->location.x / simVars->COLLIDE_SQUARE_SIZE)].remove(oldOrg))
 	{
+		drawList->remove(oldOrg);
 		oldOrg->die();
 	}
 }
@@ -113,6 +114,7 @@ void linkedList::breed(Organism* oldOrg, linkedList** LL)
 	org->maxBreed = parentA;
 	org->generation = oldOrg->generation + 1;
 	LL[int(org->location.y / simVars->COLLIDE_SQUARE_SIZE)][int(org->location.x / simVars->COLLIDE_SQUARE_SIZE)].insert(org);
+	drawList->insert(org);
 }
 void linkedList::removeFood(Food* oldFood)
 {
