@@ -21,6 +21,7 @@
 ////////////////////////////////////////////////////////////
 //Globals
 ////////////////////////////////////////////////////////////
+const int DNA_SIZE = 50;
 
 struct SimVars
 {
@@ -43,8 +44,9 @@ struct SimVars
 float vectorDistance(sf::Vector2f V1, sf::Vector2f V2);
 sf::Vector2f buffer(sf::Vector2f, SimVars* simVars);
 void initializeSimVars(int argc, char* argv[], SimVars* simVars);
+float valFromDNA(int DNA[], float min, float max, float seed);
 
-enum AI_STATES { WANDER, FOOD, MATE, FLEE, ATTACK, PROTECT, FOLLOW, FLOCK };
+enum AI_STATES { WANDER, FOOD, MATE, FLEE, ATTACK, PROTECT, FOLLOW };
 
 class Organism;
 class Food;
@@ -67,8 +69,9 @@ public:
 
 	SimVars * simVars;
 	std::vector<Organism*> list;
+	std::vector<Food*>::iterator it;
 	linkedList* drawList;
-	std::vector<Food*> foodList;
+	std::vector<Food*> plantFoodList, meatFoodList;
 	int X, Y;
 	sf::RectangleShape rect;
 };
@@ -133,17 +136,16 @@ public:
 	void displayCollisions(sf::RenderWindow* window);
 
 	sf::Vector2f location, newLoc, breedLoc;
-	int ID, BORN, LIFESPAN, LIFESTAGE, DNA[10], maxBreedingDiff, generation, NEXT_MATE;
-	float maxSpeed, maxEnergy, energy, maxVitality, vitality, radius, vision, happiness, metabolism, rotation, maxBreed, attack, roamAngle;
-	bool BREED, producer, incHap, virus, Aggro, killed, HUNGRY, LEADER;
-	int breedDNA[10], virusDNA[10];
+	int ID, BORN, LIFESPAN, LIFESTAGE, DNA[100], maxBreedingDiff, generation, NEXT_MATE;
+	float maxSpeed, maxEnergy, energy, maxVitality, vitality, radius, happiness, metabolism, rotation, maxBreed, attack, roamAngle, immunity, scaredness, hungerLevel, mateWait;
+	bool BREED, producer, incHap, virus, Aggro, killed, HUNGRY, LEADER, DEFENSIVE;
+	int breedDNA[100], virusDNA[100];
 	sf::CircleShape circ;
 	AI_STATES state = WANDER;
 	Organism* org_scariest;
 	Organism* org_youngest;
 	Organism* org_sexiest;
 	Organism* org_tastiest;
-	Organism* org_flock;
 	Food* foo_closest;
 	std::vector<Food*>::iterator foodIt;
 	SimVars* simVars;

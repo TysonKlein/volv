@@ -11,7 +11,10 @@ void linkedList::insert(Organism* newOrg)
 }
 void linkedList::insertFood(Food* newFood)
 {
-	foodList.push_back(newFood);
+	if (newFood->MEAT)
+		meatFoodList.push_back(newFood);
+	else
+		plantFoodList.push_back(newFood);
 }
 bool linkedList::remove(Organism* oldOrg) //Remove orgnism from the SEGMENT
 {
@@ -48,19 +51,19 @@ void linkedList::kill(Organism* oldOrg, linkedList** LL) //Kill a specific organ
 }
 void linkedList::breed(Organism* oldOrg, linkedList** LL)
 {
-	int newDNA[10], tot = 0, newCreature = rand() % 50;
+	int newDNA[DNA_SIZE], tot = 0, newCreature = rand() % 50;
 	float a, b, c, d;
 
-	for (int i = 0; i < 10; i++)
+	for (int i = 0; i < DNA_SIZE; i++)
 	{
-		tot += abs(oldOrg->DNA[i] - oldOrg->breedDNA[i]);
+		tot += int(oldOrg->DNA[i] != oldOrg->breedDNA[i]);
 	}
 
-	for (int i = 0; i < 10; i++)
+	for (int i = 0; i < DNA_SIZE; i++)
 	{
 		a = rand() % 2000;
 		b = rand() % 2000;
-		c = rand() % (200 + (tot<4)*(4 - tot) * 150);
+		c = rand() % (200 + (tot<int(0.1f*float(DNA_SIZE)))*(int(0.1f*float(DNA_SIZE)) - tot) * 150);
 		d = a + b + c;
 
 		a = a / d;
@@ -68,9 +71,9 @@ void linkedList::breed(Organism* oldOrg, linkedList** LL)
 		c = c / d;
 		if ((c > a && c > b) || newCreature == 0)
 		{
-			if (i == 9)
+			if (i == DNA_SIZE-1)
 			{
-				newDNA[i] = 1 + rand() % 9;
+				newDNA[i] = 1 + rand() % (DNA_SIZE-1);
 				if ((rand() % 1000) == 0)
 				{
 					newDNA[i] = 0;
@@ -78,7 +81,7 @@ void linkedList::breed(Organism* oldOrg, linkedList** LL)
 			}
 			else
 			{
-				newDNA[i] = rand() % 10;
+				newDNA[i] = rand() % DNA_SIZE;
 			}
 		}
 		else if (a > b)
@@ -92,7 +95,7 @@ void linkedList::breed(Organism* oldOrg, linkedList** LL)
 	}
 
 	int parentA = 0, parentB = 0;
-	for (int i = 0; i < 10; i++)
+	for (int i = 0; i < DNA_SIZE; i++)
 	{
 		if (oldOrg->DNA[i] != newDNA[i])
 		{
@@ -118,11 +121,24 @@ void linkedList::breed(Organism* oldOrg, linkedList** LL)
 }
 void linkedList::removeFood(Food* oldFood)
 {
-	for (int i = 0; i < foodList.size(); i++)
+	if (oldFood->MEAT)
 	{
-		if (foodList[i]->ID == oldFood->ID)
+		for (int i = 0; i < meatFoodList.size(); i++)
 		{
-			foodList.erase(foodList.begin() + i);
+			if (meatFoodList[i]->ID == oldFood->ID)
+			{
+				meatFoodList.erase(meatFoodList.begin() + i);
+			}
+		}
+	}
+	else
+	{
+		for (int i = 0; i < plantFoodList.size(); i++)
+		{
+			if (plantFoodList[i]->ID == oldFood->ID)
+			{
+				plantFoodList.erase(plantFoodList.begin() + i);
+			}
 		}
 	}
 }
@@ -132,7 +148,11 @@ void linkedList::draw(sf::RenderWindow * window)
 }
 void linkedList::drawFood(sf::RenderWindow * window)
 {
-	for (std::vector<Food*>::iterator it = foodList.begin(); it != foodList.end(); it++)
+	for (it = meatFoodList.begin(); it != meatFoodList.end(); it++)
+	{
+		(*it)->Draw(window);
+	}
+	for (it = plantFoodList.begin(); it != plantFoodList.end(); it++)
 	{
 		(*it)->Draw(window);
 	}

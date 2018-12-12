@@ -77,13 +77,13 @@ int main(int argc, char* argv[])
 	//Add organisms
 	for (int i = 0; i < simVars.INIT_NUM_ORGANISMS; i++)
 	{
-		int DNA[10];
-		for (int i = 0; i < 10; i++)
+		int DNA[DNA_SIZE];
+		for (int i = 0; i < DNA_SIZE; i++)
 		{
-			if (i == 9)
-				DNA[i] = 1 + rand() % 10;
+			if (i == DNA_SIZE-1)
+				DNA[i] = 1 + rand() % (DNA_SIZE-1);
 			else
-				DNA[i] = rand() % 10;
+				DNA[i] = rand() % DNA_SIZE;
 		}
 		Organism* org = new Organism(sf::Vector2f((rand() % (simVars.WIDTH - 2 * int(simVars.Xbuff))) + simVars.Xbuff, (rand() % (simVars.HEIGHT - 2 * int(simVars.Ybuff))) + simVars.Ybuff), DNA, &simVars);
 		org->generation = 0;
@@ -139,13 +139,13 @@ int main(int argc, char* argv[])
 
 			if ((event.type == sf::Event::MouseButtonPressed) && (event.mouseButton.button == sf::Mouse::Left))
 			{
-				int DNA[10];
-				for (int i = 0; i < 10; i++)
+				int DNA[DNA_SIZE];
+				for (int i = 0; i < DNA_SIZE; i++)
 				{
-					DNA[i] = rand() % 10;
-					if (i == 9)
+					DNA[i] = rand() % DNA_SIZE;
+					if (i == DNA_SIZE-1)
 					{
-						DNA[i] = 1 + rand() % 9;
+						DNA[i] = 1 + rand() % (DNA_SIZE-1);
 					}
 				}
 				org = new Organism(sf::Vector2f(sf::Mouse::getPosition(window).x*simVars.HEIGHT / gameHeight, sf::Mouse::getPosition(window).y*simVars.HEIGHT / gameHeight), DNA, &simVars);
@@ -154,11 +154,11 @@ int main(int argc, char* argv[])
 			}
 			if ((event.type == sf::Event::MouseButtonPressed) && (event.mouseButton.button == sf::Mouse::Right))
 			{
-				int DNA[10];
-				for (int i = 0; i < 10; i++)
+				int DNA[DNA_SIZE];
+				for (int i = 0; i < DNA_SIZE; i++)
 				{
-					DNA[i] = rand() % 10;
-					if (i == 9)
+					DNA[i] = rand() % DNA_SIZE;
+					if (i == DNA_SIZE - 1)
 					{
 						DNA[i] = 0;
 					}
@@ -273,7 +273,7 @@ int main(int argc, char* argv[])
 				{
 					for (int j = 0; j < simVars.WIDTH / simVars.COLLIDE_SQUARE_SIZE + 1; j++)
 					{
-						LL[i][j].drawFood(&window);
+						//LL[i][j].drawFood(&window);
 					}
 				}
 

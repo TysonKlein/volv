@@ -4,70 +4,70 @@ Organism::Organism(sf::Vector2f LOC, int newDNA[], SimVars* newSimVars)
 {
 	simVars = newSimVars;
 
-	for (int i = 0; i < 10; i++)
+	//Set DNA for organism
+	for (int i = 0; i < DNA_SIZE; i++)
 	{
 		DNA[i] = newDNA[i];
 	}
 
+	//set all DNA-dictated variables
+	radius = valFromDNA(DNA, 2.5f, 7.f, 628745.1386f)*valFromDNA(DNA, 2.5f, 7.f, 52323.3523f);
+	maxSpeed = 1.9f * sqrt(sqrt((valFromDNA(DNA, 2.f, 40.f, 12051.9862f))) / (radius*radius));
+	attack = (5.f + valFromDNA(DNA, 0.f, 40.f, 161205.f))*radius*radius / 1420.f;
+	immunity = valFromDNA(DNA, 1500.f, 10000.f, 7862387.234);
+	scaredness = valFromDNA(DNA, 0.f, 10.f, 896134.423f);
+	hungerLevel = valFromDNA(DNA, 10.f, 40.f, 6712876.f);
+	maxVitality = (valFromDNA(DNA, 0.f, 40.f, 123785.532f) + 10.f) * radius * radius / 15.f;
+	metabolism = (valFromDNA(DNA, 0.f, 10.f, 58726.1235f)*0.004f)*sqrt(sqrt(maxSpeed));
+	mateWait = valFromDNA(DNA, 80.f, 250.f, 815623.5196f);
+	LIFESPAN = 5.f * radius / metabolism * (valFromDNA(DNA, 0.f, 30.f, 862375.123f) + 10.f);
+
+	bodyColor.b = valFromDNA(DNA, 0.f, 255.f, 642624.6643f);
+	bodyColor.g = valFromDNA(DNA, 0.f, 255.f, 236506.5472f);
+	bodyColor.r = valFromDNA(DNA, 0.f, 255.f, 819637.0018f);
+	bodyColor.a = 160;
+
+	outlineColor.r = valFromDNA(DNA, 0.f, 255.f, 926.16413f);
+	outlineColor.g = valFromDNA(DNA, 0.f, 255.f, 1810.35235f);
+	outlineColor.b = valFromDNA(DNA, 0.f, 255.f, 52566.102365f);
+	outlineColor.a = 160;
+
+	//Set other variables
 	BORN = simVars->TIME;
 	NEXT_MATE = BORN;
 	BREED = false;
 	LEADER = false;
-	rotation = 0;
-	maxBreed = 10;
-
-	bodyColor.b = ((9-DNA[DNA[7]]) * 100 + DNA[DNA[1]] * 10 + (9 - DNA[DNA[2]])) / 4;
-	bodyColor.g = ((9 - DNA[4]) * 100 + DNA[1] * 10 + DNA[8]) / 4;
-	bodyColor.r = (DNA[DNA[0]] * 100 + DNA[2] * 10 + DNA[1]) / 4;
-	bodyColor.a = 160;
-
-	outlineColor.r = (DNA[DNA[6]] * 100 + DNA[3] * 10 + DNA[1]) / 4;
-	outlineColor.g = ((9-DNA[DNA[3]]) * 100 + DNA[6] * 10 + DNA[8]) / 4;
-	outlineColor.b = (DNA[5] * 100 + DNA[4] * 10 + DNA[1]) / 4;
-	outlineColor.a = 160;
-
+	maxBreed = DNA_SIZE;
 	LIFESTAGE = 0;
-
 	roamAngle = float(rand() % 10000) / 10000.f / 3.14f * 180.f;
 	incHap = false;
 	virus = false;
-
-	maxBreedingDiff = 10;
-
-	radius = 1.2f*sqrt(10 + DNA[3] * (9 - DNA[5]) + DNA[2] * DNA[4] * (9 - DNA[DNA[6]]));
-
-	maxSpeed = 3.f*float(DNA[2] + DNA[DNA[2]] + (9 - DNA[7])) / (radius*radius);
-
+	maxBreedingDiff = DNA_SIZE;
 	location = LOC;
 	desiredLocation = location;
 	rotation = 0;
 	repel.x = 0;
 	repel.y = 0;
 	happiness = 0.f;
-
-	attack = (35.f + DNA[2] + DNA[DNA[0]] + DNA[6] - (9 - DNA[8]))*radius*radius / 420.f;
-	if (attack < 1)
-	{
-		attack = 1;
-	}
-
 	killed = false;
-
-	maxVitality = (DNA[6] + DNA[3] + DNA[7] + DNA[DNA[8]] + 10) * radius / 5.f;
 	vitality = maxVitality;
-	metabolism = 0.1f - float((DNA[9] + DNA[DNA[3]] + (9-DNA[5])) / 3)*0.007f;
-	metabolism *= sqrt(sqrt(maxSpeed))*0.5f;
 	maxEnergy = maxVitality;
-	energy = 0.5*maxEnergy;
+	energy = 0.5f*maxEnergy;
 	producer = false;
-	LIFESPAN = 5.f * radius / metabolism * ((9 - DNA[1]) + DNA[3] + DNA[2] + 10);
+	
+	//Determine organism characteristics from these variables
+	if (scaredness > 5.f)
+		DEFENSIVE = true;
+	else
+		DEFENSIVE = false;
 
-	if ((DNA[DNA[5]] + DNA[DNA[7]] + (9 - DNA[DNA[2]])) > 20)
+	if (valFromDNA(DNA, 0.f, 25.f, 78183.43f) > 20.f) //Set Aggro
 	{
 		Aggro = true;
 		displayType = 1;
 		maxVitality *= 1.3f;
 		maxSpeed *= 1.3f;
+		immunity /= 5.f;
 	}
 	else
 	{
@@ -76,7 +76,7 @@ Organism::Organism(sf::Vector2f LOC, int newDNA[], SimVars* newSimVars)
 		displayType = 0;
 	}
 
-	if (DNA[9] == 0)
+	if (DNA[DNA_SIZE-1] == 0)
 	{
 		radius *= 1.7;
 		bodyColor.g = 230;
@@ -96,21 +96,19 @@ Organism::Organism(sf::Vector2f LOC, int newDNA[], SimVars* newSimVars)
 
 	ID = simVars->CURRENT_ORGANISM;
 	simVars->CURRENT_ORGANISM++;
-
-	vision = float(DNA[0] + DNA[6] + DNA[8]) + 8 * radius;
 }
 
 void Organism::makeSick(Organism* other)
 {
-	for (int i = 0; i < 10; i++)
+	for (int i = 0; i < DNA_SIZE; i++)
 	{
 		other->virusDNA[i] = virusDNA[i];
 	}
 
-	other->circ.setFillColor(sf::Color((virusDNA[2] * 100 + virusDNA[2] * 10 + virusDNA[1]) / 4, (virusDNA[1] * 100 + virusDNA[1] * 10 + virusDNA[8]) / 4, (virusDNA[0] * 100 + virusDNA[0] * 10 + virusDNA[1]) / 4));
+	other->circ.setFillColor(sf::Color(valFromDNA(DNA, 0.f, 255.f, 642624.6643f),valFromDNA(DNA, 0.f, 255.f, 236506.5472f),valFromDNA(DNA, 0.f, 255.f, 819637.0018f)));
 	other->circ.setRadius(other->radius*0.25f);
 	other->circ.setOutlineThickness(2);
-	other->circ.setOutlineColor(sf::Color((virusDNA[6] * 100 + virusDNA[3] * 10 + virusDNA[1]) / 4, (virusDNA[7] * 100 + virusDNA[6] * 10 + virusDNA[8]) / 4, (virusDNA[5] * 100 + virusDNA[4] * 10 + virusDNA[1]) / 4));
+	other->circ.setOutlineColor(sf::Color(valFromDNA(DNA, 0.f, 255.f, 2934.f), valFromDNA(DNA, 0.f, 255.f, 10983784.f), valFromDNA(DNA, 0.f, 255.f, 1234.f)));
 	other->circ.setOrigin(sf::Vector2f(other->radius*0.25f, other->radius*0.25f));
 
 	other->virus = true;
@@ -119,12 +117,12 @@ void Organism::makeSick(Organism* other)
 void Organism::setBody()
 {
 	// resize it to 5 points
-	float h = DNA[0] * DNA[1] + DNA[7] + 20;
-	float w = DNA[2] * DNA[1] + DNA[4] + 20;
+	float h, w;
 
 	w = radius * 1.7f;
 	h = w;
-	int N = DNA[5] + 2;
+
+	int N = int(valFromDNA(DNA, 0.f, 6.f, 3122.f)) + 2;
 
 	if (displayType == 0)
 	{
@@ -132,12 +130,12 @@ void Organism::setBody()
 		basicBody.setRadius(radius);
 		if (!producer)
 		{
-			basicBody.setPointCount((DNA[0] * DNA[3] + DNA[1]) / 10 + 3);
+			basicBody.setPointCount(int(valFromDNA(DNA, 0.f, 30.f, 62341.f)) / 10 + 3);
 		}
 		basicBody.setOrigin(radius, radius);
 		basicBody.setPosition(location);
 		basicBody.setOutlineColor(outlineColor);
-		basicBody.setOutlineThickness(DNA[9] / 2);
+		basicBody.setOutlineThickness(valFromDNA(DNA, 0.f, 6.f, 9237.f) / 2);
 	}
 	else
 	{
@@ -147,33 +145,33 @@ void Organism::setBody()
 
 		for (int i = 0; i < N; i++)
 		{
-			convexBody.setPoint(i, sf::Vector2f(i*h / float(N - 1), w / 2.f + float(DNA[i % 10] + 5) / 15.f * w / 2.f));
-			convexBody.setPoint(2 * N - i - 1, sf::Vector2f(i*h / float(N - 1), w / 2.f - float(DNA[i % 10] + 5) / 15.f*w / 2.f));
+			convexBody.setPoint(i, sf::Vector2f(i*h / float(N - 1), w / 2.f + float(DNA[i % DNA_SIZE] + 0.5*DNA_SIZE) / (1.5f*DNA_SIZE) * w / 2.f));
+			convexBody.setPoint(2 * N - i - 1, sf::Vector2f(i*h / float(N - 1), w / 2.f - float(DNA[i % DNA_SIZE] + 0.5*DNA_SIZE) / (1.5f*DNA_SIZE) * w / 2.f));
 		}
 
 		convexBody.setOrigin(h / 2.f, w / 2.f);
 		convexBody.setFillColor(bodyColor);
 		convexBody.setPosition(location);
 		convexBody.setOutlineColor(outlineColor);
-		convexBody.setOutlineThickness(DNA[9] / 2);
+		convexBody.setOutlineThickness(valFromDNA(DNA, 0.f, 6.f, 9237.f) / 2);
 	}
 }
 
 float Organism::getLikability(int DNA2[])
 {
 	int total = 0;
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 0.4f*DNA_SIZE; i++)
 	{
-		if (abs(DNA2[i] - DNA[i]) > 3)
+		if (abs(DNA2[i] - DNA[i]) > 0.3f*DNA_SIZE)
 		{
 			total -= abs(DNA2[i] - DNA[i]);
 		}
 		else
 		{
-			total++;
+			total+= 0.3f*float(DNA_SIZE);
 		}
 	}
-	return float(total) * 10.f / 4.f;
+	return float(total) * 10.f / 0.4f*float(DNA_SIZE);
 }
 
 float Organism::Collides(Organism* other, sf::Vector2f pos)
@@ -209,7 +207,7 @@ float Organism::getRadius()
 int Organism::breedDiff(Organism* other)
 {
 	int breedSum = 0;
-	for (int i = 0; i < 10; i++)
+	for (int i = 0; i < DNA_SIZE; i++)
 	{
 		breedSum += int((DNA[i] != other->DNA[i]));
 	}
@@ -224,7 +222,7 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 	HUNGRY = false;
 	bool FOUND_FOOD = false;
 
-	if (!(energy > maxEnergy*float(DNA[2] + DNA[9] + DNA[8] + (9 - DNA[1])) / 45.f))
+	if (!(energy > maxEnergy*hungerLevel / 45.f))
 	{
 		HUNGRY = true;
 	}
@@ -235,7 +233,6 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 	org_youngest = nullptr;
 	org_sexiest = nullptr;
 	org_tastiest = nullptr;
-	org_flock = nullptr;
 	foo_closest = nullptr;
 
 	repel = sf::Vector2f(0, 0);
@@ -244,7 +241,7 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 	energy -= metabolism * timeFactor;
 	if (virus)
 	{
-		energy -= 8.f*metabolism*timeFactor;
+		energy -= 400.f*metabolism*timeFactor;
 	}
 	if (energy < 0.f)
 	{
@@ -265,8 +262,6 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 	}
 	killed = false;
 
-	float lookAhead = vision / 100.f*radius;
-
 	happiness -= 0.5f*timeFactor;
 	if (happiness < 0)
 	{
@@ -274,11 +269,9 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 	}
 
 	if (producer) {
-		float a, b, c;
-
 		for (int i = 0; i < maxVitality*0.5f / (15 + DNA[2]); i++)
 		{
-			if (rand() % (5 + DNA[3] + DNA[7] + DNA[5]) == 0)
+			if (rand() % (30) == 0)
 			{
 				float angle = float(rand() % 10000) / 10000.f / 3.14f * 180.f;
 				float distance = 1.2f*radius + float(rand() % 100);
@@ -302,13 +295,13 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 		if (LIFESTAGE == 0 && simVars->TIME - BORN > LIFESPAN*0.05f)
 		{
 			LIFESTAGE = 1;
-			bodyColor.b = ((9 - DNA[DNA[7]]) * 100 + DNA[DNA[1]] * 10 + (9 - DNA[DNA[2]])) / 5 + 40;
-			bodyColor.g = ((9 - DNA[8]) * 100 + DNA[1] * 10 + DNA[8]) / 5 + 40;
-			bodyColor.r = (DNA[DNA[0]] * 100 + DNA[2] * 10 + DNA[1]) / 5 + 40;
+			bodyColor.b = valFromDNA(DNA, 0.f, 215.f, 642624.6643f) + 40.f;
+			bodyColor.g = valFromDNA(DNA, 0.f, 215.f, 236506.5472f) + 40.f;
+			bodyColor.r = valFromDNA(DNA, 0.f, 215.f, 819637.0018f) + 40.f;
 
-			outlineColor.r = (DNA[DNA[6]] * 100 + DNA[3] * 10 + DNA[1]) / 5 + 40;
-			outlineColor.g = ((9 - DNA[DNA[3]]) * 100 + DNA[6] * 10 + DNA[8]) / 5 + 40;
-			outlineColor.b = (DNA[5] * 100 + DNA[4] * 10 + DNA[1]) / 5 + 40;
+			outlineColor.r = valFromDNA(DNA, 0.f, 215.f, 926.16413f) + 40.f;
+			outlineColor.g = valFromDNA(DNA, 0.f, 215.f, 1810.35235f) + 40.f;
+			outlineColor.b = valFromDNA(DNA, 0.f, 215.f, 52566.102365f) + 40.f;
 
 			radius = radius * 1.5f;
 
@@ -319,13 +312,13 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 		else if (LIFESTAGE == 1 && simVars->TIME - BORN > LIFESPAN*0.8f)
 		{
 			LIFESTAGE = 2;
-			bodyColor.b = ((9 - DNA[DNA[7]]) * 100 + DNA[DNA[1]] * 10 + (9 - DNA[DNA[2]])) / 10 + 140;
-			bodyColor.g = ((9 - DNA[8]) * 100 + DNA[1] * 10 + DNA[8]) / 10 + 140;
-			bodyColor.r = (DNA[DNA[0]] * 100 + DNA[2] * 10 + DNA[1]) / 10 + 140;
+			bodyColor.b = valFromDNA(DNA, 0.f, 100.f, 642624.6643f) + 140.f;
+			bodyColor.g = valFromDNA(DNA, 0.f, 100.f, 236506.5472f) + 140.f;
+			bodyColor.r = valFromDNA(DNA, 0.f, 100.f, 819637.0018f) + 140.f;
 
-			outlineColor.r = (DNA[DNA[6]] * 100 + DNA[3] * 10 + DNA[1]) / 10 + 140;
-			outlineColor.g = ((9 - DNA[DNA[3]]) * 100 + DNA[6] * 10 + DNA[8]) / 10 + 140;
-			outlineColor.b = (DNA[5] * 100 + DNA[4] * 10 + DNA[1]) / 10 + 140;
+			outlineColor.r = valFromDNA(DNA, 0.f, 100.f, 926.16413f) + 140.f;
+			outlineColor.g = valFromDNA(DNA, 0.f, 100.f, 1810.35235f) + 140.f;
+			outlineColor.b = valFromDNA(DNA, 0.f, 100.f, 52566.102365f) + 140.f;
 
 			maxSpeed = maxSpeed / 1.2f;
 
@@ -334,6 +327,7 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 	}
 
 	checkFoodVicinity(0, 0, LL);
+
 	if (foo_closest != nullptr)
 	{
 		FOUND_FOOD = true;
@@ -359,18 +353,18 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 							if (!(*it)->producer && !producer && virus && !(*it)->virus) //If I have a virus and other doesnt
 							{
 								virusSum = 0;
-								for (int i = 0; i < 10; i++)
+								for (int i = 0; i < DNA_SIZE; i++)
 								{
-									if (virusDNA[i] != (*it)->DNA[i])
+									if (virusDNA[i] == (*it)->DNA[i])
 									{
 										virusSum++;
 									}
 								}
 
-								if (virusSum < 8) //if DNA is similar enough
+								if (virusSum > 0.5f*DNA_SIZE) //if DNA is similar enough
 								{
 									virusSum += 1;
-									if (rand() % (virusSum*virusSum*virusSum / 2 + 1) == 0)
+									if (rand() % ((DNA_SIZE - virusSum)*(DNA_SIZE - virusSum) / 2 + 1) == 0)
 									{
 										makeSick(*it);
 									}
@@ -407,17 +401,6 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 						if (sexiest(org_sexiest, (*it)))
 						{
 							org_sexiest = (*it);
-							if (org_sexiest->ID > ID)
-							{
-								if (org_flock == nullptr)
-								{
-									org_flock = org_sexiest;
-								}
-								else if (org_flock->ID > org_sexiest->ID)
-								{
-									org_flock = org_sexiest;
-								}
-							}
 						}
 						//Determine the youngest organism
 						if (youngest(org_youngest, (*it)))
@@ -487,14 +470,7 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 				else
 				{
 					//NO
-					if (DNA[1] >= 5 && org_flock != nullptr)
-					{
-						state = FLOCK;
-					}
-					else
-					{
-						state = WANDER;
-					}
+					state = WANDER;
 				}
 			}
 			else
@@ -507,45 +483,17 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 					//AM I SICK?
 					if (virus)
 					{
-						if (DNA[1] >= 5 && org_flock != nullptr)
-						{
-							state = FLOCK;
-						}
-						else
-						{
-							state = WANDER;
-						}
+						state = WANDER;
 					}
 					else
 					{
-						if (DNA[1] >= 5 && org_flock != nullptr)
-						{
-							state = FLOCK;
-						}
-						else
-						{
-							if (LEADER)
-							{
-								state = WANDER;
-							}
-							else
-							{
-								state = FOOD;
-							}
-						}
+						state = FOOD;
 					}
 				}
 				else
 				{
 					//NO
-					if (DNA[1] >= 5 && org_flock != nullptr)
-					{
-						state = FLOCK;
-					}
-					else
-					{
-						state = WANDER;
-					}
+					state = WANDER;
 
 					//IF AGGRO, PREY NEARBY, VERY HUNGRY?
 					if (Aggro && org_tastiest != nullptr && HUNGRY)
@@ -662,10 +610,10 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 
 			if (happiness > 100)
 			{
-				NEXT_MATE = simVars->TIME + (DNA[5] + (1 - DNA[7]) + DNA[3] + 10)*timeFactor*3.f;
+				NEXT_MATE = simVars->TIME + mateWait*timeFactor;
 				BREED = true;
 				energy *= 0.4f;
-				for (int n = 0; n < 10; n++)
+				for (int n = 0; n < DNA_SIZE; n++)
 				{
 					breedDNA[n] = org_sexiest->DNA[n];
 				}
@@ -726,40 +674,6 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 		GO_TO = org_sexiest->location;
 	}
 
-	//FLOCKING
-	if (state == FLOCK)
-	{
-		if (foo_closest != nullptr)
-		{
-			collideFactor = CollidesFood(sf::Vector2f(location.x, location.y), foo_closest->location);
-			eatFood(collideFactor, LL);
-		}
-
-		if (org_flock->org_flock != nullptr)
-		{
-			GO_TO = org_flock->desiredLocation - (org_flock->org_flock->desiredLocation - org_flock->desiredLocation);
-		}
-		else
-		{
-			org_flock->LEADER = true;
-			if (DNA[3] > 3 && DNA[6] < 7)
-			{
-				GO_TO = org_flock->location - (org_flock->desiredLocation - org_flock->location);
-			}
-			else
-			{
-				if ((BORN % 2) == 0)
-				{
-					GO_TO = org_flock->location + sf::Vector2f(-(org_flock->location.y - org_flock->desiredLocation.y), (org_flock->location.x - org_flock->desiredLocation.x)) - (org_flock->desiredLocation - org_flock->location);
-				}
-				else
-				{
-					GO_TO = org_flock->location + sf::Vector2f((org_flock->location.y - org_flock->desiredLocation.y), -(org_flock->location.x - org_flock->desiredLocation.x)) - (org_flock->desiredLocation - org_flock->location);
-				}
-			}
-		}
-	}
-
 	///////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////
 	LEADER = false;
@@ -770,40 +684,42 @@ void Organism::checkFoodVicinity(int x, int y, linkedList** LL)
 {
 	if (HUNGRY)
 	{
-		int k = 0; 
-
-		for (foodIt = LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].foodList.begin(); foodIt != LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].foodList.end(); foodIt++)
+		int k = 0;
+		///////////////////////////////////////////////////////////////////
+		//DETERMINING THE ACTIONABLE FOOD, IF ANY
+		///////////////////////////////////////////////////////////////////
+		if (Aggro)
 		{
-			///////////////////////////////////////////////////////////////////
-			//DETERMINING THE ACTIONABLE FOOD, IF ANY
-			///////////////////////////////////////////////////////////////////
-
-			//Determine the closest food
-			if (foo_closest == nullptr || closest(foo_closest, (*foodIt)))
+			for (foodIt = LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].meatFoodList.begin(); foodIt != LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].meatFoodList.end(); foodIt++)
 			{
-				if (Aggro)
+				if (foo_closest == nullptr || closest(foo_closest, (*foodIt)))
 				{
-					if ((*foodIt)->MEAT)
-					{
-						foo_closest = (*foodIt);
-					}
+					foo_closest = (*foodIt);
 				}
-				else
+				if (k > 5)
 				{
-					if (!(*foodIt)->MEAT)
-					{
-						foo_closest = (*foodIt);
-					}
+					return;
 				}
+				k++;
 			}
-			///////////////////////////////////////////////////////////////////
-			///////////////////////////////////////////////////////////////////
-			if (k > 25 && foo_closest == nullptr)
-			{
-				return;
-			}
-			k++;
 		}
+		else
+		{
+			for (foodIt = LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].plantFoodList.begin(); foodIt != LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].plantFoodList.end(); foodIt++)
+			{
+				if (foo_closest == nullptr || closest(foo_closest, (*foodIt)))
+				{
+					foo_closest = (*foodIt);
+				}
+				if (k > 5)
+				{
+					return;
+				}
+				k++;
+			}
+		}
+		///////////////////////////////////////////////////////////////////
+		///////////////////////////////////////////////////////////////////
 	}
 }
 
@@ -819,17 +735,17 @@ bool Organism::eatFood(float collideFactor, linkedList** LL)
 				{
 					energy += foo_closest->value;
 					foo_closest->Eat(LL);
-					if (rand() % (55 * (DNA[6] * DNA[8] + 1)) == 0)
+					if (rand() % int(immunity) == 0)
 					{
 						virus = true;
-						for (int i = 0; i < 10; i++)
+						for (int i = 0; i < DNA_SIZE; i++)
 						{
 							virusDNA[i] = DNA[i];
 						}
-						circ.setFillColor(sf::Color(25.f*virusDNA[2], 25.f*virusDNA[5], 25.f*virusDNA[7]));
+						circ.setFillColor(sf::Color(valFromDNA(DNA, 0.f, 255.f, 642624.6643f), valFromDNA(DNA, 0.f, 255.f, 236506.5472f), valFromDNA(DNA, 0.f, 255.f, 819637.0018f)));
 						circ.setRadius(radius*0.25f);
 						circ.setOutlineThickness(2);
-						circ.setOutlineColor(sf::Color(25.f*virusDNA[1], 25.f*virusDNA[4], 25.f*virusDNA[6]));
+						circ.setOutlineColor(sf::Color(valFromDNA(DNA, 0.f, 255.f, 2934.f), valFromDNA(DNA, 0.f, 255.f, 10983784.f), valFromDNA(DNA, 0.f, 255.f, 1234.f)));
 						circ.setOrigin(sf::Vector2f(radius*0.25f, radius*0.25f));
 					}
 				}
@@ -837,17 +753,17 @@ bool Organism::eatFood(float collideFactor, linkedList** LL)
 				{
 					energy += foo_closest->value;
 					foo_closest->Eat(LL);
-					if (rand() % (150 * (DNA[6] * DNA[2] + 1)) == 0)
+					if (rand() % int(immunity) == 0)
 					{
 						virus = true;
-						for (int i = 0; i < 10; i++)
+						for (int i = 0; i < DNA_SIZE; i++)
 						{
 							virusDNA[i] = DNA[i];
 						}
-						circ.setFillColor(sf::Color(25.f*virusDNA[2], 25.f*virusDNA[5], 25.f*virusDNA[7]));
+						circ.setFillColor(sf::Color(valFromDNA(DNA, 0.f, 255.f, 642624.6643f), valFromDNA(DNA, 0.f, 255.f, 236506.5472f), valFromDNA(DNA, 0.f, 255.f, 819637.0018f)));
 						circ.setRadius(radius*0.25f);
 						circ.setOutlineThickness(2);
-						circ.setOutlineColor(sf::Color(25.f*virusDNA[1], 25.f*virusDNA[4], 25.f*virusDNA[6]));
+						circ.setOutlineColor(sf::Color(valFromDNA(DNA, 0.f, 255.f, 2934.f), valFromDNA(DNA, 0.f, 255.f, 10983784.f), valFromDNA(DNA, 0.f, 255.f, 1234.f)));
 						circ.setOrigin(sf::Vector2f(radius*0.25f, radius*0.25f));
 					}
 				}
@@ -866,9 +782,9 @@ bool Organism::eatFood(float collideFactor, linkedList** LL)
 int Organism::similarityUpdate(Organism* other)
 {
 	int breedSum = breedDiff(other);
-	if (breedSum < simVars->BREED_BASE && breedSum <= maxBreed - 1 && breedSum >= 0)
+	if (breedSum < simVars->BREED_BASE && breedSum <= maxBreed + 0.1f*DNA_SIZE && breedSum >= 0)
 	{
-		maxBreed = breedSum;
+		maxBreed = breedSum + 0.1f*DNA_SIZE;
 	}
 	return breedSum;
 }
@@ -955,7 +871,7 @@ bool Organism::youngest(Organism* incumbent, Organism* challenger)
 	{
 		int fac = mateFac(challenger);
 		//the other organism
-		if (fac >= 0 && (challenger->LIFESTAGE == 0 || DNA[8] > 6))
+		if (fac >= 0 && (challenger->LIFESTAGE == 0))
 		{
 			if (incumbent == nullptr)
 			{
@@ -973,12 +889,12 @@ bool Organism::youngest(Organism* incumbent, Organism* challenger)
 
 bool Organism::scariest(Organism* incumbent, Organism* challenger)
 {
-	if ((((vitality > 0.8f*maxVitality && Aggro) || !Aggro) && !challenger->producer && !producer && (challenger->Aggro || DNA[7] > 6)) || challenger->virus)//if they are dangerous
+	if ((((vitality > 0.8f*maxVitality && Aggro) || !Aggro) && !challenger->producer && !producer && (challenger->Aggro || challenger->DEFENSIVE)))// || challenger->virus)//if they are dangerous
 	{
 		int BS2;
 		BS2 = breedDiff(challenger);
 		//to you
-		if (BS2 > simVars->BREED_BASE || (BS2 > challenger->maxBreed && challenger->energy < 0.2f*challenger->maxEnergy) || challenger->state == ATTACK || challenger->virus)
+		if (BS2 > simVars->BREED_BASE || (BS2 > challenger->maxBreed && challenger->energy < 0.2f*challenger->maxEnergy) || challenger->state == ATTACK || challenger->state == PROTECT)// || challenger->virus)
 		{
 			if (incumbent == nullptr)
 			{
@@ -1010,7 +926,7 @@ bool Organism::closest(Food* incumbent, Food* challenger)
 
 void Organism::move(linkedList** LL, float timefactor)
 {
-	float nudge = 0.002f, edge = 0.1f;
+	float nudge = 0.001f, edge = 0.1f;
 	bool edgeCase = false;
 	if (producer)
 	{
@@ -1116,14 +1032,6 @@ void Organism::changeVelocity(float timefactor)
 			tempVel.x *= (maxSpeed*2.f)*(1.f - 0.5f*virus) / vectorDistance(desiredLocation, location);
 		}
 	}
-	else if (state == FLOCK)
-	{
-		if (vectorDistance(desiredLocation, location) > (maxSpeed*1.5f)*(1.f - 0.5f*virus))
-		{
-			tempVel.y *= (maxSpeed*1.5f)*(1.f - 0.5f*virus) / vectorDistance(desiredLocation, location);
-			tempVel.x *= (maxSpeed*1.5f)*(1.f - 0.5f*virus) / vectorDistance(desiredLocation, location);
-		}
-	}
 	else
 	{
 		if (vectorDistance(desiredLocation, location) > (maxSpeed)*(1.f - 0.5f*virus))
@@ -1132,7 +1040,7 @@ void Organism::changeVelocity(float timefactor)
 			tempVel.x *= (maxSpeed)*(1.f - 0.5f*virus) / vectorDistance(desiredLocation, location);
 		}
 	}
-	float diff = 0.0015f*float(DNA[6] + DNA[2])*timefactor + float(int(state == FLOCK))*0.03f;
+	float diff = 0.015f*timefactor;
 
 	velocity.x = (1.0f - diff)*velocity.x + diff * tempVel.x;
 	velocity.y = (1.0f - diff)*velocity.y + diff * tempVel.y;
@@ -1203,10 +1111,6 @@ void Organism::displayCollisions(sf::RenderWindow* window)
 	case PROTECT:
 		lines[1].color = sf::Color::Cyan;
 		lines[0].color = sf::Color::Cyan;
-		break;
-	case FLOCK:
-		lines[1].color = sf::Color(255, 255, 255, 250);
-		lines[0].color = sf::Color(255, 255, 255, 250);
 		break;
 	default:
 		break;
