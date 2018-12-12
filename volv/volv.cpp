@@ -2,22 +2,54 @@
 
 int main(int argc, char* argv[])
 {
+	//Setting vars from command line args
 	SimVars simVars;
 	initializeSimVars(argc, argv, &simVars);
 	
 	std::srand(simVars.SEED);
 
 	// Define some constants
+	int gameWidth = float(1280);
+	int gameHeight = float(720);
+	float simRatio = float(simVars.WIDTH) / float(simVars.HEIGHT);
+	float dispRatio = float(gameWidth) / float(gameHeight);
+	int framesBetweenAI = 5, framesBetweenFood = 10, currentAIframes = 0, secAI = 0, secFRAMES = 0, currentFoodFrames = 0;
 
-	int gameWidth = float(800 * simVars.WIDTH / float(simVars.HEIGHT));
-	int gameHeight = float(800);
-	int framesBetweenAI = 5, framesBetweenFood = 10;
-	int currentAIframes = 0, secAI = 0, secFRAMES = 0, currentFoodFrames = 0;
+	// Create the window of the application
+	sf::RenderWindow window;
 
+	if (simVars.FULLSCREEN)
+		window.create(sf::VideoMode::getFullscreenModes().front(), "", sf::Style::Fullscreen);	
+	else
+		window.create(sf::VideoMode(gameWidth, gameHeight, 32), "", sf::Style::Default);
+
+	sf::View overView;
+	overView.setSize(simVars.WIDTH, simVars.HEIGHT);
+	overView.setCenter(simVars.WIDTH / 2, simVars.HEIGHT / 2);
+
+	if (simRatio < dispRatio)
+	{
+		//Too tall to fit
+		overView.setViewport(sf::FloatRect(0.5f - 0.5f*(simRatio/dispRatio), 0.f, simRatio/dispRatio, 1.f));
+	}
+	else
+	{
+		//Too wide to fit
+		overView.setViewport(sf::FloatRect(0.f, 0.5f - 0.5f*(dispRatio / simRatio), 1.f, dispRatio / simRatio));
+	}
+	window.setView(overView);
+
+	//Organism pointer for each new organism addition
 	Organism* org;
+
+	//LL list for collisions and logic, drawList for drawing the organisms only
 	linkedList** LL;
 	linkedList drawList;
 
+	//Iterators
+	std::vector<Organism*>::iterator orgIt;
+
+	//Init both lists
 	LL = new linkedList*[simVars.HEIGHT / simVars.COLLIDE_SQUARE_SIZE + 1]();
 
 	for (int i = 0; i < simVars.HEIGHT / simVars.COLLIDE_SQUARE_SIZE + 1; i++)
@@ -42,6 +74,7 @@ int main(int argc, char* argv[])
 	drawList.Y = 0;
 	drawList.simVars = &simVars;
 
+	//Add organisms
 	for (int i = 0; i < simVars.INIT_NUM_ORGANISMS; i++)
 	{
 		int DNA[10];
@@ -58,7 +91,7 @@ int main(int argc, char* argv[])
 		drawList.insert(org);
 	}
 
-	//FOOD
+	//Add initial food
 	if (true)
 	{
 		for (int i = 0; i < int(float(simVars.WIDTH*simVars.HEIGHT*simVars.FOODRATE) / 150000.f); i++)
@@ -67,26 +100,13 @@ int main(int argc, char* argv[])
 			{
 				sf::Vector2f pos((rand() % (simVars.WIDTH - 2 * int(simVars.Xbuff))) + simVars.Xbuff, (rand() % (simVars.HEIGHT - 2 * int(simVars.Ybuff))) + simVars.Ybuff);
 				pos = buffer(pos, &simVars);
-				Food* food = new Food(15 + rand() % 5, pos, &simVars);
+				Food* food = new Food(pos, &simVars);
 				LL[int(pos.y / simVars.COLLIDE_SQUARE_SIZE)][int(pos.x / simVars.COLLIDE_SQUARE_SIZE)].insertFood(food);
 			}
 		}
 	}
 
-	// Create the window of the application
-	sf::RenderWindow window(sf::VideoMode(gameWidth, gameHeight, 32), "",
-		sf::Style::Default);
-	sf::View overView;
-	overView.setSize(simVars.WIDTH, simVars.HEIGHT);
-	overView.setCenter(simVars.WIDTH / 2, simVars.HEIGHT / 2);
-	overView.setViewport(sf::FloatRect(0.f, 0.f, 1.f, 1.f));
-	window.setView(overView);
-
-	// Load the text font
-	sf::Font font;
-	font.loadFromFile("consola.ttf");
-
-	// Define the paddles properties
+	//Clocks and Timers
 	sf::Clock AITimer;
 	const sf::Time AITime = sf::seconds(1.0f / 30.0f);
 	sf::Clock secTimer;
@@ -94,10 +114,13 @@ int main(int argc, char* argv[])
 	sf::Clock clock;
 	bool isPlaying = true;
 
+	//Event for event handler
+	sf::Event event;
+
 	while (window.isOpen())
 	{
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// Handle events
-		sf::Event event;
 		while (window.pollEvent(event))
 		{
 			// Window closed or escape key pressed: exit
@@ -145,7 +168,11 @@ int main(int argc, char* argv[])
 				drawList.insert(org);
 			}
 		}
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		//Draw, AI, all calculations
 		if (isPlaying)
 		{
 			float deltaTime = clock.restart().asSeconds();
@@ -170,9 +197,9 @@ int main(int argc, char* argv[])
 					{
 						for (int j = 0; j < simVars.WIDTH / simVars.COLLIDE_SQUARE_SIZE + 1; j++)
 						{
-							for (std::vector<Organism*>::iterator it = LL[i][j].list.begin(); it != LL[i][j].list.end(); it++)
+							for (orgIt = LL[i][j].list.begin(); orgIt != LL[i][j].list.end(); orgIt++)
 							{
-								(*it)->AI((*it)->ID, LL, float(framesBetweenAI)*AITime.asSeconds() / (2.f / 60.f));
+								(*orgIt)->AI((*orgIt)->ID, LL, float(framesBetweenAI)*AITime.asSeconds() / (2.f / 60.f));
 							}
 						}
 					}
@@ -192,7 +219,7 @@ int main(int argc, char* argv[])
 							sf::Vector2f pos(simVars.Xbuff + rand() % int(simVars.WIDTH - 2 * simVars.Xbuff), simVars.Ybuff + rand() % int(simVars.HEIGHT - 2 * simVars.Ybuff));
 							pos = buffer(pos, &simVars);
 							
-							Food* food = new Food(15 + rand() % 4, pos, &simVars);
+							Food* food = new Food(pos, &simVars);
 							LL[int(pos.y / simVars.COLLIDE_SQUARE_SIZE)][int(pos.x / simVars.COLLIDE_SQUARE_SIZE)].insertFood(food);
 						}
 					}
@@ -230,6 +257,7 @@ int main(int argc, char* argv[])
 				// Clear the window
 				window.clear(sf::Color(0, 0, 0));
 
+				//Draw in order -> Dev_squares, food, organisms
 				if (simVars.DEVMODE)
 				{
 					for (int i = 0; i < simVars.HEIGHT / simVars.COLLIDE_SQUARE_SIZE + 1; i++)
@@ -246,7 +274,6 @@ int main(int argc, char* argv[])
 					for (int j = 0; j < simVars.WIDTH / simVars.COLLIDE_SQUARE_SIZE + 1; j++)
 					{
 						LL[i][j].drawFood(&window);
-						//LL[i][j].drawOrganisms(&window);
 					}
 				}
 
@@ -256,6 +283,7 @@ int main(int argc, char* argv[])
 				window.display();
 			}
 		}
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	}
 	return EXIT_SUCCESS;
 }

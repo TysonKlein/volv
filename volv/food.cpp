@@ -1,28 +1,28 @@
 #include "header.hpp"
 
-Food::Food(int val, sf::Vector2f pos, SimVars* newSimVars)
+Food::Food(sf::Vector2f pos, SimVars* newSimVars)
 {
 	simVars = newSimVars;
 
 	location = pos;
-	value = val;
+	value = 20;
 
 	rect.setSize(sf::Vector2f(4, 4));
 	rect.setOrigin(sf::Vector2f(2, 2));
 	rect.setFillColor(sf::Color(255, 255, 255, 70));
 	rect.setPosition(location);
 
-	killed = false;
+	MEAT = false;
 	ID = simVars->CURRENT_FOOD;
 	simVars->CURRENT_FOOD++;
 }
 void Food::setKilled()
 {
-	killed = true;
+	MEAT = true;
 	rect.setFillColor(sf::Color(255, 150, 150, 110));
 	rect.setSize(sf::Vector2f(6, 6));
 	rect.setOrigin(sf::Vector2f(3, 3));
-	value *= 2.5f;
+	value = 50;
 }
 void Food::Draw(sf::RenderWindow* window)
 {

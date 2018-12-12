@@ -76,14 +76,14 @@ public:
 class Food
 {
 public:
-	Food(int val, sf::Vector2f pos, SimVars* newSimVars);
+	Food(sf::Vector2f pos, SimVars* newSimVars);
 	void setKilled();
 	void Draw(sf::RenderWindow* window);
 	void Eat(linkedList** LL);
 
 	int value, ID;
 	sf::Vector2f location;
-	bool killed;
+	bool MEAT;
 	SimVars* simVars;
 private:
 	sf::RectangleShape rect;
@@ -145,6 +145,7 @@ public:
 	Organism* org_tastiest;
 	Organism* org_flock;
 	Food* foo_closest;
+	std::vector<Food*>::iterator foodIt;
 	SimVars* simVars;
 
 private:

@@ -17,7 +17,7 @@ Organism::Organism(sf::Vector2f LOC, int newDNA[], SimVars* newSimVars)
 	maxBreed = 10;
 
 	bodyColor.b = ((9-DNA[DNA[7]]) * 100 + DNA[DNA[1]] * 10 + (9 - DNA[DNA[2]])) / 4;
-	bodyColor.g = ((9 - DNA[8]) * 100 + DNA[1] * 10 + DNA[8]) / 4;
+	bodyColor.g = ((9 - DNA[4]) * 100 + DNA[1] * 10 + DNA[8]) / 4;
 	bodyColor.r = (DNA[DNA[0]] * 100 + DNA[2] * 10 + DNA[1]) / 4;
 	bodyColor.a = 160;
 
@@ -34,9 +34,9 @@ Organism::Organism(sf::Vector2f LOC, int newDNA[], SimVars* newSimVars)
 
 	maxBreedingDiff = 10;
 
-	radius = 1.1f*sqrt(10 + DNA[3] * (9 - DNA[5]) + DNA[2] * DNA[4] * (9 - DNA[DNA[6]]));
+	radius = 1.2f*sqrt(10 + DNA[3] * (9 - DNA[5]) + DNA[2] * DNA[4] * (9 - DNA[DNA[6]]));
 
-	maxSpeed = 1.2f*float(DNA[2] + DNA[DNA[2]] + (9 - DNA[7])) / (radius*radius);
+	maxSpeed = 3.f*float(DNA[2] + DNA[DNA[2]] + (9 - DNA[7])) / (radius*radius);
 
 	location = LOC;
 	desiredLocation = location;
@@ -60,7 +60,7 @@ Organism::Organism(sf::Vector2f LOC, int newDNA[], SimVars* newSimVars)
 	maxEnergy = maxVitality;
 	energy = 0.5*maxEnergy;
 	producer = false;
-	LIFESPAN = 50.f / metabolism * ((9 - DNA[1]) + DNA[3] + DNA[2] + 10);
+	LIFESPAN = 5.f * radius / metabolism * ((9 - DNA[1]) + DNA[3] + DNA[2] + 10);
 
 	if ((DNA[DNA[5]] + DNA[DNA[7]] + (9 - DNA[DNA[2]])) > 20)
 	{
@@ -286,7 +286,7 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 				sf::Vector2f pos(location.x + std::cosf(angle)*distance, location.y + std::sinf(angle)*distance);
 				pos = buffer(pos, simVars);
 
-				Food* food = new Food(15 + DNA[2], pos, simVars);
+				Food* food = new Food(pos, simVars);
 				food->simVars = simVars;
 
 				LL[int(pos.y / simVars->COLLIDE_SQUARE_SIZE)][int(pos.x / simVars->COLLIDE_SQUARE_SIZE)].insertFood(food);
@@ -378,8 +378,14 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 							}
 
 							//Repel from close organism
-							repel.x -= (radius + (*it)->radius - vectorDistance((*it)->location, location))*((*it)->location.x - location.x);
-							repel.y -= (radius + (*it)->radius - vectorDistance((*it)->location, location))*((*it)->location.y - location.y);
+							float radFac = (*it)->radius / radius;
+							radFac = radFac * radFac*radFac*radFac;
+
+							if (radFac > 1.f)
+								radFac = 1.f;
+
+							repel.x -= (radius + (*it)->radius - vectorDistance((*it)->location, location))*((*it)->location.x - location.x)*radFac;
+							repel.y -= (radius + (*it)->radius - vectorDistance((*it)->location, location))*((*it)->location.y - location.y)*radFac;
 
 							similarityUpdate((*it));
 						}
@@ -566,13 +572,13 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 		if (!eatFood(collideFactor, LL))
 		{
 			//EAT HERBO
-			if (!Aggro && !foo_closest->killed)
+			if (!Aggro && !foo_closest->MEAT)
 			{
 				GO_TO = foo_closest->location;
 			}
 
 			//EAT AGGRO
-			else if (Aggro && foo_closest->killed)
+			else if (Aggro && foo_closest->MEAT)
 			{
 				GO_TO = foo_closest->location;
 			}
@@ -654,7 +660,7 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 				happiness = 110;
 			}
 
-			if (happiness > 100)// && org_sexiest->energy > org_sexiest->maxEnergy*float(org_sexiest->DNA[2] + org_sexiest->DNA[9] + org_sexiest->DNA[8] + org_sexiest->DNA[1]) / 45.f)
+			if (happiness > 100)
 			{
 				NEXT_MATE = simVars->TIME + (DNA[5] + (1 - DNA[7]) + DNA[3] + 10)*timeFactor*3.f;
 				BREED = true;
@@ -684,12 +690,13 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 			{
 				roamAngle -= 180.f / M_PI;
 			}
+
 			if (foo_closest != nullptr)
 			{
 				collideFactor = CollidesFood(sf::Vector2f(location.x, location.y), foo_closest->location);
-
 				eatFood(collideFactor, LL);
 			}
+
 			GO_TO = sf::Vector2f(location.x + std::cosf(roamAngle)*60.f / 2.f, location.y + std::sinf(roamAngle)*60.f / 2.f);
 		}
 		else
@@ -710,12 +717,16 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 	//FOLLOWING
 	if (state == FOLLOW)
 	{
-		GO_TO = org_sexiest->location;
+		if (foo_closest != nullptr)
+		{
+			collideFactor = CollidesFood(sf::Vector2f(location.x, location.y), foo_closest->location);
+			eatFood(collideFactor, LL);
+		}
 
-		collideFactor = Collides(org_sexiest, sf::Vector2f(location.x, location.y));
+		GO_TO = org_sexiest->location;
 	}
 
-	//LATTICEING
+	//FLOCKING
 	if (state == FLOCK)
 	{
 		if (foo_closest != nullptr)
@@ -759,27 +770,29 @@ void Organism::checkFoodVicinity(int x, int y, linkedList** LL)
 {
 	if (HUNGRY)
 	{
-		for (int k = 0; k < LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].foodList.size(); k++)
+		int k = 0; 
+
+		for (foodIt = LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].foodList.begin(); foodIt != LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].foodList.end(); foodIt++)
 		{
 			///////////////////////////////////////////////////////////////////
 			//DETERMINING THE ACTIONABLE FOOD, IF ANY
 			///////////////////////////////////////////////////////////////////
 
 			//Determine the closest food
-			if (foo_closest == nullptr || closest(foo_closest, LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].foodList[k]))
+			if (foo_closest == nullptr || closest(foo_closest, (*foodIt)))
 			{
 				if (Aggro)
 				{
-					if (LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].foodList[k]->killed)
+					if ((*foodIt)->MEAT)
 					{
-						foo_closest = LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].foodList[k];
+						foo_closest = (*foodIt);
 					}
 				}
 				else
 				{
-					if (!LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].foodList[k]->killed)
+					if (!(*foodIt)->MEAT)
 					{
-						foo_closest = LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].foodList[k];
+						foo_closest = (*foodIt);
 					}
 				}
 			}
@@ -789,19 +802,20 @@ void Organism::checkFoodVicinity(int x, int y, linkedList** LL)
 			{
 				return;
 			}
+			k++;
 		}
 	}
 }
 
 bool Organism::eatFood(float collideFactor, linkedList** LL)
 {
-	if (collideFactor > 2.f / 3.f)
+	if (collideFactor > 2.5f / 3.f)
 	{
-		if (maxEnergy - energy > foo_closest->value)
+		if (maxEnergy - energy > foo_closest->value || state == FOOD)
 		{
 			if (!producer && !virus)
 			{
-				if (Aggro && foo_closest->killed)
+				if (Aggro && foo_closest->MEAT)
 				{
 					energy += foo_closest->value;
 					foo_closest->Eat(LL);
@@ -819,7 +833,7 @@ bool Organism::eatFood(float collideFactor, linkedList** LL)
 						circ.setOrigin(sf::Vector2f(radius*0.25f, radius*0.25f));
 					}
 				}
-				else if (!Aggro && !foo_closest->killed)
+				else if (!Aggro && !foo_closest->MEAT)
 				{
 					energy += foo_closest->value;
 					foo_closest->Eat(LL);
@@ -906,7 +920,7 @@ bool Organism::tastiest(Organism* incumbent, Organism* challenger)
 			int fac = attackFac(challenger);
 
 			//And if you can eat them based on similarity
-			if (fac >= 0)
+			if (fac >= 0 && challenger->radius*0.75 < radius && challenger->radius*2.f > radius)
 			{
 				return true;
 			}
@@ -996,7 +1010,7 @@ bool Organism::closest(Food* incumbent, Food* challenger)
 
 void Organism::move(linkedList** LL, float timefactor)
 {
-	float nudge = 0.0255f / radius, edge = 0.1f;
+	float nudge = 0.002f, edge = 0.1f;
 	bool edgeCase = false;
 	if (producer)
 	{
