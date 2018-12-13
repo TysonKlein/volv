@@ -86,7 +86,7 @@ void initializeSimVars(int argc, char* argv[], SimVars* simVars)
 		options.add_options("Simulation")
 			("y,height", "Simulaton Height", cxxopts::value<int>(simVars->HEIGHT)->default_value("1000"))
 			("x,width", "Simulaton Width", cxxopts::value<int>(simVars->WIDTH)->default_value("1500"))
-			("n,number_organisms", "Number of unique organisms to start simulation", cxxopts::value<int>(simVars->INIT_NUM_ORGANISMS)->default_value("50"))
+			("n,number_organisms", "Number of unique organisms to start simulation", cxxopts::value<int>(simVars->INIT_NUM_ORGANISMS)->default_value("1500"))
 			("s,seed", "Seeded simulation, random seed if not", cxxopts::value<int>(simVars->SEED)->default_value(std::to_string(static_cast<unsigned int>(std::time(NULL)))))
 			("food_density", "Food spawn density", cxxopts::value<int>(simVars->FOODRATE)->default_value("20"))
 			;

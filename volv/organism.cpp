@@ -12,7 +12,7 @@ Organism::Organism(sf::Vector2f LOC, int newDNA[], SimVars* newSimVars)
 
 	//set all DNA-dictated variables
 	radius = valFromDNA(DNA, 2.5f, 7.f, 628745.1386f)*valFromDNA(DNA, 2.5f, 7.f, 52323.3523f);
-	maxSpeed = 1.9f * sqrt(sqrt((valFromDNA(DNA, 2.f, 40.f, 12051.9862f))) / (radius*radius));
+	maxSpeed = 1.9f * sqrt(sqrt((valFromDNA(DNA, 8.f, 140.f, 12051.9862f))) / (radius*radius));
 	attack = (5.f + valFromDNA(DNA, 0.f, 40.f, 161205.f))*radius*radius / 1420.f;
 	immunity = valFromDNA(DNA, 1500.f, 10000.f, 7862387.234);
 	scaredness = valFromDNA(DNA, 0.f, 10.f, 896134.423f);
@@ -21,6 +21,7 @@ Organism::Organism(sf::Vector2f LOC, int newDNA[], SimVars* newSimVars)
 	metabolism = (valFromDNA(DNA, 0.f, 10.f, 58726.1235f)*0.004f)*sqrt(sqrt(maxSpeed));
 	mateWait = valFromDNA(DNA, 80.f, 250.f, 815623.5196f);
 	LIFESPAN = 5.f * radius / metabolism * (valFromDNA(DNA, 0.f, 30.f, 862375.123f) + 10.f);
+	vision = std::min(valFromDNA(DNA, 2.f*radius, 10.f*radius, 815623.5196f), float(simVars->COLLIDE_SQUARE_SIZE));
 
 	bodyColor.b = valFromDNA(DNA, 0.f, 255.f, 642624.6643f);
 	bodyColor.g = valFromDNA(DNA, 0.f, 255.f, 236506.5472f);
@@ -130,7 +131,7 @@ void Organism::setBody()
 		basicBody.setRadius(radius);
 		if (!producer)
 		{
-			basicBody.setPointCount(int(valFromDNA(DNA, 0.f, 30.f, 62341.f)) / 10 + 3);
+			basicBody.setPointCount(int(valFromDNA(DNA, 0.f, 50.f, 62341.f)) / 10 + 3);
 		}
 		basicBody.setOrigin(radius, radius);
 		basicBody.setPosition(location);
@@ -241,7 +242,7 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 	energy -= metabolism * timeFactor;
 	if (virus)
 	{
-		energy -= 400.f*metabolism*timeFactor;
+		energy -= 1000.f*metabolism*timeFactor;
 	}
 	if (energy < 0.f)
 	{
@@ -250,7 +251,7 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 
 	if (energy < 0.0001f)
 	{
-		vitality -= 4 * metabolism*timeFactor;
+		vitality -= 20 * metabolism*timeFactor;
 	}
 	else
 	{
@@ -341,7 +342,7 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 			{
 				for (std::vector<Organism*>::iterator it = LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].list.begin(); it != LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].list.end(); it++)
 				{
-					if (ID != (*it)->ID)//If it is a different organism
+					if (vectorDistance((*it)->location, location) < vision && ID != (*it)->ID)//If it is a different organism
 					{
 						///////////////////////////////////////////////////////////////////
 						//INVOLUNTARY CONTACT CONSEQUENCES (viruses, repelling, breeding values)
@@ -373,13 +374,13 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 
 							//Repel from close organism
 							float radFac = (*it)->radius / radius;
-							radFac = radFac * radFac*radFac*radFac;
+							radFac = radFac*radFac*radFac*radFac;
 
 							if (radFac > 1.f)
 								radFac = 1.f;
 
-							repel.x -= (radius + (*it)->radius - vectorDistance((*it)->location, location))*((*it)->location.x - location.x)*radFac;
-							repel.y -= (radius + (*it)->radius - vectorDistance((*it)->location, location))*((*it)->location.y - location.y)*radFac;
+							repel.x -= collideFactor*((*it)->location.x - location.x)*radFac;
+							repel.y -= collideFactor*((*it)->location.y - location.y)*radFac;
 
 							similarityUpdate((*it));
 						}
@@ -431,7 +432,7 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 	//DETERMINING THE BEHAVIOUR FOR THIS ORGANISM (STATE, see flow chart)
 	///////////////////////////////////////////////////////////////////
 
-	//IS OFFSPRING SAFE / AM I NOT OFFSPRING?
+	//IS OFFSPRING SAFE AND AM I NOT OFFSPRING?
 	if (org_youngest != nullptr && org_scariest != nullptr && org_youngest != org_scariest && LIFESTAGE != 0)
 	{
 		//NO
@@ -444,7 +445,12 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 		if (org_scariest != nullptr)
 		{
 			//NO
-			state = FLEE;
+
+			//AM I DEFENSIVE?
+			if (DEFENSIVE)
+				state = DEFEND;
+			else
+				state = FLEE;
 		}
 		else
 		{
@@ -537,6 +543,32 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 	if (state == FLEE)
 	{
 		GO_TO = sf::Vector2f(location - (org_scariest->location - location));
+	}
+
+	//DEFENDING
+	if (state == DEFEND)
+	{
+		collideFactor = Collides(org_scariest, sf::Vector2f(location.x, location.y));
+
+		if (collideFactor > 0.0001f)
+		{
+			if (LIFESTAGE == 1)
+			{
+				org_scariest->vitality -= attack;
+				org_scariest->killed = true;
+			}
+			else
+			{
+				org_scariest->vitality -= 0.3f*attack;
+				org_scariest->killed = true;
+			}
+		}
+
+		float distance = 2.f*(radius+ org_scariest->radius);
+		sf::Vector2f vec = sf::Vector2f(org_scariest->location - location);
+		float between = sqrt(vec.x*vec.x + vec.y*vec.y);
+
+		GO_TO = org_scariest->location- vec * 0.9f;
 	}
 
 	//PROTECTING
@@ -692,30 +724,36 @@ void Organism::checkFoodVicinity(int x, int y, linkedList** LL)
 		{
 			for (foodIt = LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].meatFoodList.begin(); foodIt != LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].meatFoodList.end(); foodIt++)
 			{
-				if (foo_closest == nullptr || closest(foo_closest, (*foodIt)))
+				if (vectorDistance((*foodIt)->location, location) < vision)
 				{
-					foo_closest = (*foodIt);
+					if (foo_closest == nullptr || closest(foo_closest, (*foodIt)))
+					{
+						foo_closest = (*foodIt);
+					}
+					if (k > 5)
+					{
+						return;
+					}
+					k++;
 				}
-				if (k > 5)
-				{
-					return;
-				}
-				k++;
 			}
 		}
 		else
 		{
 			for (foodIt = LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].plantFoodList.begin(); foodIt != LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].plantFoodList.end(); foodIt++)
 			{
-				if (foo_closest == nullptr || closest(foo_closest, (*foodIt)))
+				if (vectorDistance((*foodIt)->location, location) < vision)
 				{
-					foo_closest = (*foodIt);
+					if (foo_closest == nullptr || closest(foo_closest, (*foodIt)))
+					{
+						foo_closest = (*foodIt);
+					}
+					if (k > 5)
+					{
+						return;
+					}
+					k++;
 				}
-				if (k > 5)
-				{
-					return;
-				}
-				k++;
 			}
 		}
 		///////////////////////////////////////////////////////////////////
@@ -725,7 +763,7 @@ void Organism::checkFoodVicinity(int x, int y, linkedList** LL)
 
 bool Organism::eatFood(float collideFactor, linkedList** LL)
 {
-	if (collideFactor > 2.5f / 3.f)
+	if (collideFactor > 0.01f)
 	{
 		if (maxEnergy - energy > foo_closest->value || state == FOOD)
 		{
@@ -789,32 +827,71 @@ int Organism::similarityUpdate(Organism* other)
 	return breedSum;
 }
 
-int Organism::mateFac(Organism* other)
+//Returns value between 0(low mate factor) and 1(High mate factor)
+bool Organism::mateFac(Organism* other)
 {
 	int breedSum = breedDiff(other);
-	if (breedSum < simVars->BREED_BASE && breedSum <= maxBreed && breedSum >= 0)
+
+	if (other->radius*0.66f > radius || other->radius*1.5f < radius)
 	{
-		return (maxBreed - breedSum);
+		//return false;
 	}
-	return -1;
+
+	if (breedSum < simVars->BREED_BASE && breedSum <= maxBreed)
+	{
+		return true;
+	}
+
+	return false;
 }
-int Organism::attackFac(Organism* other)
+
+bool Organism::attackFac(Organism* other)
 {
 	int breedSum = breedDiff(other);
-	if (breedSum > (maxBreed + int(energy < 0.4f*maxEnergy) * 2))
+
+	if (energy < 0.4f*maxEnergy)
 	{
-		return (breedSum - (maxBreed + int(energy < 0.4f*maxEnergy) * 2));
+		breedSum += 0.5f*DNA_SIZE;
 	}
-	return -1;
+
+	if (other->radius*0.66f > radius || other->radius*1.5f < radius)
+	{
+		//return false;
+	}
+
+	if (breedSum > simVars->BREED_BASE && breedSum > maxBreed)
+	{
+		return true;
+	}
+
+	return false;
 }
-int Organism::defendFac(Organism* other)
+
+bool Organism::scaryFac(Organism* other)
 {
 	int breedSum = breedDiff(other);
-	if (breedSum > maxBreed + 2 * int(other->Aggro) + 1)
+
+	if (other->Aggro || other->DEFENSIVE || other->virus)
 	{
-		return (breedSum - (maxBreed + 2 * int(other->Aggro) + 1));
+		breedSum += 0.2f*DNA_SIZE;
 	}
-	return -1;
+
+	if(other->state == ATTACK || other->state == PROTECT)
+	{
+		breedSum += 0.3f*DNA_SIZE;
+	}
+
+	if (other->radius*0.66f > radius || other->radius*1.5f < radius)
+	{
+		//return false;
+	}
+
+	if (breedSum > simVars->BREED_BASE && breedSum > maxBreed)
+	{
+		return true;
+	}
+
+	return false;
 }
 
 bool Organism::tastiest(Organism* incumbent, Organism* challenger)
@@ -823,9 +900,9 @@ bool Organism::tastiest(Organism* incumbent, Organism* challenger)
 	{
 		if (incumbent == nullptr)
 		{
-			int fac = attackFac(challenger);
+			bool fac = attackFac(challenger);
 			//And if you can eat them based on similarity
-			if (fac >= 0)
+			if (fac)
 			{
 				return true;
 			}
@@ -833,10 +910,10 @@ bool Organism::tastiest(Organism* incumbent, Organism* challenger)
 		//And if some factor is biggger
 		else if (vectorDistance(location, challenger->location) < vectorDistance(location, incumbent->location))
 		{
-			int fac = attackFac(challenger);
+			bool fac = attackFac(challenger);
 
 			//And if you can eat them based on similarity
-			if (fac >= 0 && challenger->radius*0.75 < radius && challenger->radius*2.f > radius)
+			if (fac)
 			{
 				return true;
 			}
@@ -848,14 +925,15 @@ bool Organism::sexiest(Organism* incumbent, Organism* challenger)
 {
 	if (!challenger->producer && !producer && !virus)//if you can mate
 	{
-		int fac = mateFac(challenger);
+		bool fac = mateFac(challenger);
 		//With other organism
-		if (fac >= 0 && challenger->LIFESTAGE == 1)
+		if (fac && challenger->LIFESTAGE == 1)
 		{
 			if (incumbent == nullptr)
 			{
 				return true;
 			}
+
 			//And they are closest
 			if (vectorDistance(location, challenger->location) < vectorDistance(location, incumbent->location))
 			{
@@ -869,9 +947,9 @@ bool Organism::youngest(Organism* incumbent, Organism* challenger)
 {
 	if (!challenger->producer && !producer)//if you are able to protect
 	{
-		int fac = mateFac(challenger);
+		bool fac = mateFac(challenger);
 		//the other organism
-		if (fac >= 0 && (challenger->LIFESTAGE == 0))
+		if (fac && (challenger->LIFESTAGE == 0))
 		{
 			if (incumbent == nullptr)
 			{
@@ -886,15 +964,13 @@ bool Organism::youngest(Organism* incumbent, Organism* challenger)
 	}
 	return false;
 }
-
 bool Organism::scariest(Organism* incumbent, Organism* challenger)
 {
-	if ((((vitality > 0.8f*maxVitality && Aggro) || !Aggro) && !challenger->producer && !producer && (challenger->Aggro || challenger->DEFENSIVE)))// || challenger->virus)//if they are dangerous
+	if (!challenger->producer && !producer)
 	{
-		int BS2;
-		BS2 = breedDiff(challenger);
+		bool fac = scaryFac(challenger);
 		//to you
-		if (BS2 > simVars->BREED_BASE || (BS2 > challenger->maxBreed && challenger->energy < 0.2f*challenger->maxEnergy) || challenger->state == ATTACK || challenger->state == PROTECT)// || challenger->virus)
+		if (fac)
 		{
 			if (incumbent == nullptr)
 			{
@@ -926,7 +1002,7 @@ bool Organism::closest(Food* incumbent, Food* challenger)
 
 void Organism::move(linkedList** LL, float timefactor)
 {
-	float nudge = 0.001f, edge = 0.1f;
+	float nudge = 0.07f, edge = 0.1f;
 	bool edgeCase = false;
 	if (producer)
 	{
@@ -961,8 +1037,8 @@ void Organism::move(linkedList** LL, float timefactor)
 
 	newLoc = location;
 
-	newLoc.x += velocity.x*timefactor + nudge * repel.x;
-	newLoc.y += velocity.y*timefactor + nudge * repel.y;
+	newLoc.x += velocity.x*timefactor + std::min(nudge * repel.x, radius / 2.f);
+	newLoc.y += velocity.y*timefactor + std::min(nudge * repel.y, radius / 2.f);
 
 	if (newLoc.x - radius < 0)
 	{
