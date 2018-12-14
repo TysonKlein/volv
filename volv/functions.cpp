@@ -74,7 +74,7 @@ void initializeSimVars(int argc, char* argv[], SimVars* simVars)
 		options.add_options("Engine")
 			("x_buff", "Horizontal edge buffer", cxxopts::value<float>(simVars->Xbuff)->default_value("30"))
 			("y_buff", "Vertical edge buffer", cxxopts::value<float>(simVars->Ybuff)->default_value("30"))
-			("collision_square_size", "Side length of each hash-table collision square", cxxopts::value<int>(simVars->COLLIDE_SQUARE_SIZE)->default_value("60"))
+			("collision_square_size", "Side length of each hash-table collision square", cxxopts::value<int>(simVars->COLLIDE_SQUARE_SIZE)->default_value("80"))
 			("u,unlimited_framerate", "Unlock fame rate", cxxopts::value<bool>(simVars->UNLIMIED_FRAMERATE))
 			;
 

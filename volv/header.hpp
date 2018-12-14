@@ -118,7 +118,9 @@ public:
 	bool mateFac(Organism* other);
 	bool attackFac(Organism* other);
 	bool scaryFac(Organism* other);
+	bool weirdFac(Organism* other);
 
+	bool weirdest(Organism* incumbent, Organism* challenger);
 	bool tastiest(Organism* incumbent, Organism* challenger);
 	bool sexiest(Organism* incumbent, Organism* challenger);
 	bool youngest(Organism* incumbent, Organism* challenger);
@@ -146,6 +148,7 @@ public:
 	Organism* org_youngest;
 	Organism* org_sexiest;
 	Organism* org_tastiest;
+	Organism* org_weirdest;
 	Food* foo_closest;
 	std::vector<Food*>::iterator foodIt;
 	SimVars* simVars;

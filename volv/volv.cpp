@@ -273,7 +273,7 @@ int main(int argc, char* argv[])
 				{
 					for (int j = 0; j < simVars.WIDTH / simVars.COLLIDE_SQUARE_SIZE + 1; j++)
 					{
-						//LL[i][j].drawFood(&window);
+						LL[i][j].drawFood(&window);
 					}
 				}
 

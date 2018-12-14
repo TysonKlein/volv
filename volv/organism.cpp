@@ -11,11 +11,11 @@ Organism::Organism(sf::Vector2f LOC, int newDNA[], SimVars* newSimVars)
 	}
 
 	//set all DNA-dictated variables
-	radius = valFromDNA(DNA, 2.5f, 7.f, 628745.1386f)*valFromDNA(DNA, 2.5f, 7.f, 52323.3523f);
+	radius = valFromDNA(DNA, 1.0f, 3.f, 628745.1386f)*valFromDNA(DNA, 2.0f, 4.f, 52323.3523f)*valFromDNA(DNA, 2.0f, 4.f, 8965245.345f);
 	maxSpeed = 1.9f * sqrt(sqrt((valFromDNA(DNA, 8.f, 140.f, 12051.9862f))) / (radius*radius));
 	attack = (5.f + valFromDNA(DNA, 0.f, 40.f, 161205.f))*radius*radius / 1420.f;
 	immunity = valFromDNA(DNA, 1500.f, 10000.f, 7862387.234);
-	scaredness = valFromDNA(DNA, 0.f, 10.f, 896134.423f);
+	scaredness = valFromDNA(DNA, 0.f, 20.f, 896134.423f);
 	hungerLevel = valFromDNA(DNA, 10.f, 40.f, 6712876.f);
 	maxVitality = (valFromDNA(DNA, 0.f, 40.f, 123785.532f) + 10.f) * radius * radius / 15.f;
 	metabolism = (valFromDNA(DNA, 0.f, 10.f, 58726.1235f)*0.004f)*sqrt(sqrt(maxSpeed));
@@ -58,7 +58,11 @@ Organism::Organism(sf::Vector2f LOC, int newDNA[], SimVars* newSimVars)
 	
 	//Determine organism characteristics from these variables
 	if (scaredness > 5.f)
+	{
 		DEFENSIVE = true;
+		attack *= 1.5f;
+		maxVitality *= 1.3f;
+	}
 	else
 		DEFENSIVE = false;
 
@@ -187,9 +191,9 @@ float Organism::Collides(Organism* other, sf::Vector2f pos)
 
 float Organism::CollidesFood(sf::Vector2f pos1, sf::Vector2f pos2)
 {
-	if (vectorDistance(pos1, pos2) < 3.f*radius)
+	if (vectorDistance(pos1, pos2) < 0.8f*radius)
 	{
-		float m = (3.f*radius - vectorDistance(pos1, pos2)) / (3.f*radius);
+		float m = (0.8f*radius - vectorDistance(pos1, pos2)) / (0.8f*radius);
 		return m;
 	}
 	return 0.0f;
@@ -234,6 +238,7 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 	org_youngest = nullptr;
 	org_sexiest = nullptr;
 	org_tastiest = nullptr;
+	org_weirdest = nullptr;
 	foo_closest = nullptr;
 
 	repel = sf::Vector2f(0, 0);
@@ -413,6 +418,10 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 						{
 							org_scariest = (*it);
 						}
+						if (weirdest(org_weirdest, (*it)))
+						{
+							org_weirdest = (*it);
+						}
 						///////////////////////////////////////////////////////////////////
 						///////////////////////////////////////////////////////////////////
 
@@ -433,7 +442,7 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 	///////////////////////////////////////////////////////////////////
 
 	//IS OFFSPRING SAFE AND AM I NOT OFFSPRING?
-	if (org_youngest != nullptr && org_scariest != nullptr && org_youngest != org_scariest && LIFESTAGE != 0)
+	if (org_youngest != nullptr && org_scariest != nullptr && org_youngest != org_scariest && LIFESTAGE != 0 && int(scaredness)%2 == 0)
 	{
 		//NO
 		state = PROTECT;
@@ -441,16 +450,12 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 	else
 	{
 		//YES
-		//AM I SAFE?
-		if (org_scariest != nullptr)
+		//AM I DEFENSIVE?
+		if (DEFENSIVE && org_weirdest != nullptr)
+			state = DEFEND;
+		else if (org_scariest != nullptr)
 		{
-			//NO
-
-			//AM I DEFENSIVE?
-			if (DEFENSIVE)
-				state = DEFEND;
-			else
-				state = FLEE;
+			state = FLEE;
 		}
 		else
 		{
@@ -548,27 +553,27 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 	//DEFENDING
 	if (state == DEFEND)
 	{
-		collideFactor = Collides(org_scariest, sf::Vector2f(location.x, location.y));
+		collideFactor = Collides(org_weirdest, sf::Vector2f(location.x, location.y));
 
 		if (collideFactor > 0.0001f)
 		{
 			if (LIFESTAGE == 1)
 			{
-				org_scariest->vitality -= attack;
-				org_scariest->killed = true;
+				org_weirdest->vitality -= attack;
+				org_weirdest->killed = true;
 			}
 			else
 			{
-				org_scariest->vitality -= 0.3f*attack;
-				org_scariest->killed = true;
+				org_weirdest->vitality -= 0.3f*attack;
+				org_weirdest->killed = true;
 			}
 		}
 
-		float distance = 2.f*(radius+ org_scariest->radius);
-		sf::Vector2f vec = sf::Vector2f(org_scariest->location - location);
+		float distance = 2.f*(radius+ org_weirdest->radius);
+		sf::Vector2f vec = sf::Vector2f(org_weirdest->location - location);
 		float between = sqrt(vec.x*vec.x + vec.y*vec.y);
 
-		GO_TO = org_scariest->location- vec * 0.9f;
+		GO_TO = org_weirdest->location- vec * 1.1f;
 	}
 
 	//PROTECTING
@@ -876,7 +881,7 @@ bool Organism::scaryFac(Organism* other)
 		breedSum += 0.2f*DNA_SIZE;
 	}
 
-	if(other->state == ATTACK || other->state == PROTECT)
+	if (other->state == ATTACK || other->state == PROTECT)
 	{
 		breedSum += 0.3f*DNA_SIZE;
 	}
@@ -891,6 +896,57 @@ bool Organism::scaryFac(Organism* other)
 		return true;
 	}
 
+	return false;
+}
+
+bool Organism::weirdFac(Organism* other)
+{
+	int breedSum = breedDiff(other);
+
+	if (other->Aggro != Aggro)
+	{
+		breedSum += 0.1f*DNA_SIZE;
+	}
+
+	if (other->state == ATTACK || other->state == PROTECT)
+	{
+		breedSum -= 0.3f*DNA_SIZE;
+	}
+
+	if (breedSum > maxBreed)
+	{
+		return true;
+	}
+
+	return false;
+}
+
+
+bool Organism::weirdest(Organism* incumbent, Organism* challenger)
+{
+	if (!challenger->producer && !producer)//if you can see weidness
+	{
+		if (incumbent == nullptr)
+		{
+			bool fac = weirdFac(challenger);
+			//And if you think they are weird
+			if (fac)
+			{
+				return true;
+			}
+		}
+		//And if some factor is biggger
+		else if (vectorDistance(location, challenger->location) < vectorDistance(location, incumbent->location))
+		{
+			bool fac = weirdFac(challenger);
+
+			//And if you think they are weird
+			if (fac)
+			{
+				return true;
+			}
+		}
+	}
 	return false;
 }
 
