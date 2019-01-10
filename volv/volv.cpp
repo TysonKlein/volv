@@ -13,7 +13,8 @@ int main(int argc, char* argv[])
 	int gameHeight = float(720);
 	float simRatio = float(simVars.WIDTH) / float(simVars.HEIGHT);
 	float dispRatio = float(gameWidth) / float(gameHeight);
-	int framesBetweenAI = 5, framesBetweenFood = 10, currentAIframes = 0, secAI = 0, secFRAMES = 0, currentFoodFrames = 0;
+	int framesBetweenAI = 10, framesBetweenFood = 10, currentAIframes = 0, secAI = 0, secFRAMES = 0, currentFoodFrames = 0, drawSkipFrames = 0, currentDrawFrames = 0;
+	sf::Vector2f lastBarrier(-1.f, -1.f);
 
 	// Create the window of the application
 	sf::RenderWindow window;
@@ -108,11 +109,14 @@ int main(int argc, char* argv[])
 
 	//Clocks and Timers
 	sf::Clock AITimer;
-	const sf::Time AITime = sf::seconds(1.0f / 30.0f);
+	const sf::Time AITime = sf::seconds(1.0f / 300.0f);
 	sf::Clock secTimer;
 	const sf::Time sec = sf::seconds(1.0f);
+	sf::Clock drawTimer;
+	const sf::Time drawTime = sf::seconds(1.0f / 30.0f);
 	sf::Clock clock;
 	bool isPlaying = true;
+	bool mouseDown = false;
 
 	//Event for event handler
 	sf::Event event;
@@ -154,25 +158,26 @@ int main(int argc, char* argv[])
 			}
 			if ((event.type == sf::Event::MouseButtonPressed) && (event.mouseButton.button == sf::Mouse::Right))
 			{
-				int DNA[DNA_SIZE];
-				for (int i = 0; i < DNA_SIZE; i++)
-				{
-					DNA[i] = rand() % DNA_SIZE;
-					if (i == DNA_SIZE - 1)
-					{
-						DNA[i] = 0;
-					}
-				}
-				org = new Organism(sf::Vector2f(sf::Mouse::getPosition(window).x*simVars.HEIGHT / gameHeight, sf::Mouse::getPosition(window).y*simVars.HEIGHT / gameHeight), DNA, &simVars);
-				LL[int(org->location.y / simVars.COLLIDE_SQUARE_SIZE)][int(org->location.x / simVars.COLLIDE_SQUARE_SIZE)].insert(org);
-				drawList.insert(org);
+				mouseDown = true;
+			}
+			if ((event.type == sf::Event::MouseButtonReleased) && (event.mouseButton.button == sf::Mouse::Right))
+			{
+				mouseDown = false;
 			}
 		}
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
+		if (mouseDown)
+		{
+			if (vectorDistance(lastBarrier, sf::Vector2f(sf::Mouse::getPosition(window).x, sf::Mouse::getPosition(window).y)) > 10.f)
+			{
+				lastBarrier = sf::Vector2f(sf::Mouse::getPosition(window).x, sf::Mouse::getPosition(window).y);
+				Barrier* bar = new Barrier(sf::Mouse::getPosition(window).x*simVars.HEIGHT / gameHeight, sf::Mouse::getPosition(window).y*simVars.HEIGHT / gameHeight, float(simVars.COLLIDE_SQUARE_SIZE), &simVars);
+				LL[int(bar->location.y / simVars.COLLIDE_SQUARE_SIZE)][int(bar->location.x / simVars.COLLIDE_SQUARE_SIZE)].insertBarrier(bar);
+			}
+		}
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		//Draw, AI, all calculations
+		//AI, all calculations
 		if (isPlaying)
 		{
 			float deltaTime = clock.restart().asSeconds();
@@ -199,7 +204,12 @@ int main(int argc, char* argv[])
 						{
 							for (orgIt = LL[i][j].list.begin(); orgIt != LL[i][j].list.end(); orgIt++)
 							{
-								(*orgIt)->AI((*orgIt)->ID, LL, float(framesBetweenAI)*AITime.asSeconds() / (2.f / 60.f));
+								(*orgIt)->AI((*orgIt)->ID, LL, float(framesBetweenAI));
+							}
+							
+							for (std::vector<Barrier*>::iterator bit = LL[i][j].barrierList.begin(); bit != LL[i][j].barrierList.end(); bit++)
+							{
+								(*bit)->removeFood(LL);
 							}
 						}
 					}
@@ -214,7 +224,7 @@ int main(int argc, char* argv[])
 				{
 					for (int i = 0; i < simVars.WIDTH * simVars.HEIGHT * simVars.FOODRATE / 500000 + 1; i++)
 					{
-						if (rand() % 20 == 0)
+						if (rand() % 200 == 0)
 						{
 							sf::Vector2f pos(simVars.Xbuff + rand() % int(simVars.WIDTH - 2 * simVars.Xbuff), simVars.Ybuff + rand() % int(simVars.HEIGHT - 2 * simVars.Ybuff));
 							pos = buffer(pos, &simVars);
@@ -241,8 +251,8 @@ int main(int argc, char* argv[])
 								LL[i][j].kill(LL[i][j].list[k], LL);
 							}
 							else {
-								LL[i][j].list[k]->changeVelocity(AITime.asSeconds() * 60.f);
-								LL[i][j].list[k]->move(LL, AITime.asSeconds() * 60.f);
+								LL[i][j].list[k]->changeVelocity(1.f);
+								LL[i][j].list[k]->move(LL, 1.f);
 							}
 						}
 						for (int k = 0; k < LL[i][j].list.size(); k++)
@@ -254,6 +264,23 @@ int main(int argc, char* argv[])
 						}
 					}
 				}
+			}
+		}
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		//Draw
+		if (drawTimer.getElapsedTime() > drawTime)
+		{
+			if (currentDrawFrames < drawSkipFrames)
+			{
+				currentDrawFrames++;
+			}
+			else
+			{
+				currentDrawFrames = 0;
+				drawTimer.restart();
 				// Clear the window
 				window.clear(sf::Color(0, 0, 0));
 
@@ -274,13 +301,29 @@ int main(int argc, char* argv[])
 					for (int j = 0; j < simVars.WIDTH / simVars.COLLIDE_SQUARE_SIZE + 1; j++)
 					{
 						LL[i][j].drawFood(&window);
+						LL[i][j].drawBarrier(&window);
 					}
 				}
+				/**/
 
 				drawList.drawOrganisms(&window);
 
 				// Display things on screen
 				window.display();
+
+				//Check if things are taking too long to draw and skip some frames to compensate
+				if (drawTimer.getElapsedTime() > drawTime*0.5f)
+				{
+					drawSkipFrames++;
+				}
+				else if (drawSkipFrames != 0 && drawTimer.getElapsedTime() < drawTime*0.25f)
+				{
+					drawSkipFrames--;
+					if (drawSkipFrames < 0)
+					{
+						drawSkipFrames = 0;
+					}
+				}
 			}
 		}
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

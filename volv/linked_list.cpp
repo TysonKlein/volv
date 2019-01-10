@@ -16,6 +16,10 @@ void linkedList::insertFood(Food* newFood)
 	else
 		plantFoodList.push_back(newFood);
 }
+void linkedList::insertBarrier(Barrier * newBarrier)
+{
+	barrierList.push_back(newBarrier);
+}
 bool linkedList::remove(Organism* oldOrg) //Remove orgnism from the SEGMENT
 {
 	for (int i = 0; i < list.size(); i++)//Iterate through the list of organisms for this segment
@@ -155,6 +159,13 @@ void linkedList::drawFood(sf::RenderWindow * window)
 	for (it = plantFoodList.begin(); it != plantFoodList.end(); it++)
 	{
 		(*it)->Draw(window);
+	}
+}
+void linkedList::drawBarrier(sf::RenderWindow * window)
+{
+	for (std::vector<Barrier*>::iterator bit = barrierList.begin(); bit != barrierList.end(); bit++)
+	{
+		(*bit)->Draw(window);
 	}
 }
 void linkedList::drawOrganisms(sf::RenderWindow * window)

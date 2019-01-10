@@ -5,7 +5,15 @@ float vectorDistance(sf::Vector2f V1, sf::Vector2f V2)
 	float x, y;
 	x = V1.x - V2.x;
 	y = V1.y - V2.y;
-	return sqrt(x*x + y * y);
+	return sqrt(x * x + y * y);
+}
+
+float vectorDistanceSQ(sf::Vector2f V1, sf::Vector2f V2)
+{
+	float x, y;
+	x = V1.x - V2.x;
+	y = V1.y - V2.y;
+	return (x * x + y * y);
 }
 
 float valFromDNA(int DNA[], float min, float max, float seed)
@@ -32,6 +40,16 @@ float valFromDNA(int DNA[], float min, float max, float seed)
 		}
 	}
 	return abs(float(int(retVal) % int(max-min)) + min);
+}
+
+float Collides(sf::Vector2f p1, sf::Vector2f p2, float r1, float r2)
+{
+	if (vectorDistance(p1, p2) < r1 + r2)
+	{
+		float m = (r1 + r2 - vectorDistance(p1, p2)) / (r1 + r2);
+		return m;
+	}
+	return 0.0f;
 }
 
 sf::Vector2f buffer(sf::Vector2f pos, SimVars* simVars)
@@ -74,7 +92,7 @@ void initializeSimVars(int argc, char* argv[], SimVars* simVars)
 		options.add_options("Engine")
 			("x_buff", "Horizontal edge buffer", cxxopts::value<float>(simVars->Xbuff)->default_value("30"))
 			("y_buff", "Vertical edge buffer", cxxopts::value<float>(simVars->Ybuff)->default_value("30"))
-			("collision_square_size", "Side length of each hash-table collision square", cxxopts::value<int>(simVars->COLLIDE_SQUARE_SIZE)->default_value("80"))
+			("collision_square_size", "Side length of each hash-table collision square", cxxopts::value<int>(simVars->COLLIDE_SQUARE_SIZE)->default_value("100"))
 			("u,unlimited_framerate", "Unlock fame rate", cxxopts::value<bool>(simVars->UNLIMIED_FRAMERATE))
 			;
 
@@ -84,11 +102,11 @@ void initializeSimVars(int argc, char* argv[], SimVars* simVars)
 			;
 
 		options.add_options("Simulation")
-			("y,height", "Simulaton Height", cxxopts::value<int>(simVars->HEIGHT)->default_value("1000"))
-			("x,width", "Simulaton Width", cxxopts::value<int>(simVars->WIDTH)->default_value("1500"))
-			("n,number_organisms", "Number of unique organisms to start simulation", cxxopts::value<int>(simVars->INIT_NUM_ORGANISMS)->default_value("1500"))
+			("y,height", "Simulaton Height", cxxopts::value<int>(simVars->HEIGHT)->default_value("1500"))
+			("x,width", "Simulaton Width", cxxopts::value<int>(simVars->WIDTH)->default_value("1800"))
+			("n,number_organisms", "Number of unique organisms to start simulation", cxxopts::value<int>(simVars->INIT_NUM_ORGANISMS)->default_value("100"))
 			("s,seed", "Seeded simulation, random seed if not", cxxopts::value<int>(simVars->SEED)->default_value(std::to_string(static_cast<unsigned int>(std::time(NULL)))))
-			("food_density", "Food spawn density", cxxopts::value<int>(simVars->FOODRATE)->default_value("20"))
+			("food_density", "Food spawn density", cxxopts::value<int>(simVars->FOODRATE)->default_value("15"))
 			;
 
 		options.add_options() //Other options

@@ -5,7 +5,7 @@ Food::Food(sf::Vector2f pos, SimVars* newSimVars)
 	simVars = newSimVars;
 
 	location = pos;
-	value = 20;
+	value = 15;
 
 	rect.setSize(sf::Vector2f(4, 4));
 	rect.setOrigin(sf::Vector2f(2, 2));
@@ -22,7 +22,7 @@ void Food::setKilled()
 	rect.setFillColor(sf::Color(255, 150, 150, 110));
 	rect.setSize(sf::Vector2f(6, 6));
 	rect.setOrigin(sf::Vector2f(3, 3));
-	value = 50;
+	value = 30;
 }
 void Food::Draw(sf::RenderWindow* window)
 {

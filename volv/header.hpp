@@ -21,7 +21,7 @@
 ////////////////////////////////////////////////////////////
 //Globals
 ////////////////////////////////////////////////////////////
-const int DNA_SIZE = 40;
+const int DNA_SIZE = 20;
 
 struct SimVars
 {
@@ -42,6 +42,8 @@ struct SimVars
 };
 
 float vectorDistance(sf::Vector2f V1, sf::Vector2f V2);
+float vectorDistanceSQ(sf::Vector2f V1, sf::Vector2f V2);
+float Collides(sf::Vector2f p1, sf::Vector2f p2, float r1, float r2);
 sf::Vector2f buffer(sf::Vector2f, SimVars* simVars);
 void initializeSimVars(int argc, char* argv[], SimVars* simVars);
 float valFromDNA(int DNA[], float min, float max, float seed);
@@ -50,6 +52,7 @@ enum AI_STATES { WANDER, FOOD, MATE, FLEE, ATTACK, PROTECT, FOLLOW, DEFEND };
 
 class Organism;
 class Food;
+class Barrier;
 
 class linkedList
 {
@@ -58,6 +61,7 @@ public:
 
 	void insert(Organism* newOrg);
 	void insertFood(Food* newFood);
+	void insertBarrier(Barrier* newBarrier);
 	bool remove(Organism* oldOrg);
 	void kill(Organism* oldOrg, linkedList** LL);
 	void breed(Organism* oldOrg, linkedList** LL);
@@ -66,12 +70,14 @@ public:
 	void draw(sf::RenderWindow * window);
 	void drawOrganisms(sf::RenderWindow * window);
 	void drawFood(sf::RenderWindow * window);
+	void drawBarrier(sf::RenderWindow * window);
 
 	SimVars * simVars;
 	std::vector<Organism*> list;
 	std::vector<Food*>::iterator it;
 	linkedList* drawList;
 	std::vector<Food*> plantFoodList, meatFoodList;
+	std::vector<Barrier*> barrierList;
 	int X, Y;
 	sf::RectangleShape rect;
 };
@@ -103,8 +109,6 @@ public:
 	float getLikability(int DNA2[]);
 	int similarityUpdate(Organism* other);
 
-	float Collides(Organism* other, sf::Vector2f pos);
-	float CollidesFood(sf::Vector2f pos1, sf::Vector2f pos2);
 	void checkFoodVicinity(int x, int y, linkedList** LL);
 	bool eatFood(float collideFactor, linkedList** LL);
 
@@ -138,7 +142,7 @@ public:
 	void displayCollisions(sf::RenderWindow* window);
 
 	sf::Vector2f location, newLoc, breedLoc;
-	int ID, BORN, LIFESPAN, LIFESTAGE, DNA[100], maxBreedingDiff, generation, NEXT_MATE;
+	int ID, BORN, LIFESPAN, LIFESTAGE, DNA[100], maxBreedingDiff, generation, NEXT_MATE, breedVar;
 	float maxSpeed, maxEnergy, energy, maxVitality, vitality, radius, happiness, metabolism, rotation, maxBreed, attack, roamAngle, immunity, scaredness, hungerLevel, mateWait, vision;
 	bool BREED, producer, incHap, virus, Aggro, killed, HUNGRY, LEADER, DEFENSIVE;
 	int breedDNA[100], virusDNA[100];
@@ -149,6 +153,8 @@ public:
 	Organism* org_sexiest;
 	Organism* org_tastiest;
 	Organism* org_weirdest;
+	std::vector<Organism*>::iterator it;
+	std::vector<Barrier*>::iterator bit;
 	Food* foo_closest;
 	std::vector<Food*>::iterator foodIt;
 	SimVars* simVars;
@@ -160,6 +166,21 @@ private:
 	sf::Color bodyColor, outlineColor;
 	sf::Vector2f velocity, desiredLocation, repel, tempVel;
 	bool fleeing;
+};
+
+class Barrier
+{
+public:
+	Barrier(float x, float y, float newRadius, SimVars* newSimVars);
+	void removeFood(linkedList** LL);
+	void Draw(sf::RenderWindow* window);
+
+	float radius;
+	sf::Vector2f location;
+	SimVars* simVars;
+private:
+	std::vector<Food*>::iterator foodIt;
+	sf::CircleShape circ;
 };
 
 #endif // !HEADER_HPP_DECLARED
