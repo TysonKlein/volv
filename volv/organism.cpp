@@ -11,8 +11,8 @@ Organism::Organism(sf::Vector2f LOC, int newDNA[], SimVars* newSimVars)
 	}
 
 	//set all DNA-dictated variables
-	radius = valFromDNA(DNA, 2.0f, 3.f, 628745.1386f)*valFromDNA(DNA, 2.0f, 4.f, 52323.3523f)*valFromDNA(DNA, 2.0f, 4.f, 8965245.345f);
-	maxSpeed = 2.9f * sqrt(sqrt((valFromDNA(DNA, 8.f, 140.f, 12051.9862f))) / (radius*radius));
+	radius = valFromDNA(DNA, 2.0f, 4.f, 628745.1386f)*valFromDNA(DNA, 3.0f, 4.f, 52323.3523f)*valFromDNA(DNA, 2.0f, 5.f, 8965245.345f);
+	maxSpeed = 1.3f * sqrt(sqrt((valFromDNA(DNA, 8.f, 140.f, 12051.9862f))) / (radius*radius));
 	attack = (5.f + valFromDNA(DNA, 0.f, 40.f, 161205.f))*radius*radius / 1420.f;
 	immunity = valFromDNA(DNA, 1500.f, 10000.f, 7862387.234);
 	scaredness = valFromDNA(DNA, 0.f, 20.f, 896134.423f);
@@ -26,12 +26,12 @@ Organism::Organism(sf::Vector2f LOC, int newDNA[], SimVars* newSimVars)
 	bodyColor.b = valFromDNA(DNA, 0.f, 255.f, 642624.6643f);
 	bodyColor.g = valFromDNA(DNA, 0.f, 255.f, 236506.5472f);
 	bodyColor.r = valFromDNA(DNA, 0.f, 255.f, 819637.0018f);
-	//bodyColor.a = 160;
+	bodyColor.a = 160;
 
 	outlineColor.r = valFromDNA(DNA, 0.f, 255.f, 926.16413f);
 	outlineColor.g = valFromDNA(DNA, 0.f, 255.f, 1810.35235f);
 	outlineColor.b = valFromDNA(DNA, 0.f, 255.f, 52566.102365f);
-	//outlineColor.a = 160;
+	outlineColor.a = 160;
 
 	//Set other variables
 	BORN = simVars->TIME;
@@ -70,14 +70,14 @@ Organism::Organism(sf::Vector2f LOC, int newDNA[], SimVars* newSimVars)
 	{
 		Aggro = true;
 		displayType = 1;
-		maxVitality *= 1.3f;
-		maxSpeed *= 1.3f;
+		maxVitality *= 1.5f;
+		maxSpeed *= 1.5f;
 		immunity /= 5.f;
 	}
 	else
 	{
 		Aggro = false;
-		attack /= 1.5f;
+		attack /= 2.f;
 		displayType = 0;
 	}
 
@@ -139,8 +139,8 @@ void Organism::setBody()
 		}
 		basicBody.setOrigin(radius, radius);
 		basicBody.setPosition(location);
-		//basicBody.setOutlineColor(outlineColor);
-		//basicBody.setOutlineThickness(valFromDNA(DNA, 0.f, 6.f, 9237.f) / 2 + 1.f);
+		basicBody.setOutlineColor(outlineColor);
+		basicBody.setOutlineThickness(valFromDNA(DNA, 0.f, 6.f, 9237.f) / 2 + 1.f);
 	}
 	else
 	{
@@ -157,8 +157,8 @@ void Organism::setBody()
 		convexBody.setOrigin(h / 2.f, w / 2.f);
 		convexBody.setFillColor(bodyColor);
 		convexBody.setPosition(location);
-		//convexBody.setOutlineColor(outlineColor);
-		//convexBody.setOutlineThickness(valFromDNA(DNA, 0.f, 6.f, 9237.f) / 2 + 1.f);
+		convexBody.setOutlineColor(outlineColor);
+		convexBody.setOutlineThickness(valFromDNA(DNA, 0.f, 6.f, 9237.f) / 2 + 1.f);
 	}
 }
 
@@ -258,10 +258,10 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 	if (producer) {
 		for (int i = 0; i < maxVitality*0.5f / (15 + DNA[2]); i++)
 		{
-			if (rand() % (30) == 0)
+			if (rand() % (400) == 0)
 			{
 				float angle = float(rand() % 10000) / 10000.f / 3.14f * 180.f;
-				float distance = 1.2f*radius + float(rand() % 100);
+				float distance = 2.2f*radius + float(rand() % 100);
 
 				sf::Vector2f pos(location.x + std::cosf(angle)*distance, location.y + std::sinf(angle)*distance);
 				pos = buffer(pos, simVars);
@@ -1038,7 +1038,7 @@ bool Organism::closest(Food* incumbent, Food* challenger)
 
 void Organism::move(linkedList** LL, float timefactor)
 {
-	float nudge = 0.1f, edge = 0.9f;
+	float nudge = 0.02f, edge = 0.9f;
 	bool edgeCase = false;
 	if (producer)
 	{

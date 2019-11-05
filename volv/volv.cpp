@@ -8,6 +8,14 @@ int main(int argc, char* argv[])
 	
 	std::srand(simVars.SEED);
 
+	sf::Font font;
+	font.loadFromFile("res/dpcomic.ttf");
+	sf::Text timerTxt;
+	timerTxt.setFont(font);
+	timerTxt.setPosition(100, 100);
+	timerTxt.scale(2.f, 2.f);
+	timerTxt.setString("HELLO");
+
 	// Define some constants
 	int gameWidth = float(1280);
 	int gameHeight = float(720);
@@ -141,6 +149,11 @@ int main(int argc, char* argv[])
 				simVars.DEVMODE = !simVars.DEVMODE;
 			}
 
+			if ((event.type == sf::Event::KeyPressed) && (event.key.code == sf::Keyboard::U))
+			{
+				simVars.UNLIMIED_FRAMERATE = !simVars.UNLIMIED_FRAMERATE;
+			}
+
 			if ((event.type == sf::Event::MouseButtonPressed) && (event.mouseButton.button == sf::Mouse::Left))
 			{
 				int DNA[DNA_SIZE];
@@ -149,7 +162,7 @@ int main(int argc, char* argv[])
 					DNA[i] = rand() % DNA_SIZE;
 					if (i == DNA_SIZE-1)
 					{
-						DNA[i] = 1 + rand() % (DNA_SIZE-1);
+						DNA[i] = 0;
 					}
 				}
 				org = new Organism(sf::Vector2f(sf::Mouse::getPosition(window).x*simVars.HEIGHT / gameHeight, sf::Mouse::getPosition(window).y*simVars.HEIGHT / gameHeight), DNA, &simVars);
@@ -172,7 +185,7 @@ int main(int argc, char* argv[])
 			if (vectorDistance(lastBarrier, sf::Vector2f(sf::Mouse::getPosition(window).x, sf::Mouse::getPosition(window).y)) > 10.f)
 			{
 				lastBarrier = sf::Vector2f(sf::Mouse::getPosition(window).x, sf::Mouse::getPosition(window).y);
-				Barrier* bar = new Barrier(sf::Mouse::getPosition(window).x*simVars.HEIGHT / gameHeight, sf::Mouse::getPosition(window).y*simVars.HEIGHT / gameHeight, float(simVars.COLLIDE_SQUARE_SIZE), &simVars);
+				Barrier* bar = new Barrier(sf::Mouse::getPosition(window).x*simVars.HEIGHT / gameHeight, sf::Mouse::getPosition(window).y*simVars.HEIGHT / gameHeight, float(simVars.COLLIDE_SQUARE_SIZE/2), &simVars);
 				LL[int(bar->location.y / simVars.COLLIDE_SQUARE_SIZE)][int(bar->location.x / simVars.COLLIDE_SQUARE_SIZE)].insertBarrier(bar);
 			}
 		}
@@ -307,6 +320,26 @@ int main(int argc, char* argv[])
 				/**/
 
 				drawList.drawOrganisms(&window);
+
+				std::string s = std::to_string(int(float(simVars.TIME)*AITime.asSeconds())%60);
+				std::string m = std::to_string(int(float(simVars.TIME/60)*AITime.asSeconds())%60);
+				std::string h = std::to_string(int(float(simVars.TIME/3600)*AITime.asSeconds()));
+
+				if (s.length() == 1)
+				{
+					s = '0' + s;
+				}
+				if (m.length() == 1)
+				{
+					m = '0' + m;
+				}
+				if (h.length() == 1)
+				{
+					h = '0' + h;
+				}
+
+				timerTxt.setString(h + ':' + m + ':' + s);
+				window.draw(timerTxt);
 
 				// Display things on screen
 				window.display();

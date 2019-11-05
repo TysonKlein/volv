@@ -41,7 +41,7 @@ void linkedList::kill(Organism* oldOrg, linkedList** LL) //Kill a specific organ
 		pos.y += float(rand() % 100) / 50.0f*oldOrg->radius - oldOrg->radius;
 		pos = buffer(pos, simVars);
 		Food* food = new Food(pos, simVars);
-		if (oldOrg->killed || rand() % 15 == 0)
+		if (oldOrg->killed || rand() % 8 == 0)
 		{
 			food->setKilled();
 		}
