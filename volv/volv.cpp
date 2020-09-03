@@ -6,7 +6,7 @@ int main(int argc, char* argv[])
 	SimVars simVars;
 	initializeSimVars(argc, argv, &simVars);
 	
-	std::srand(simVars.SEED);
+	std::srand(simVars.nSeed);
 
 	sf::Font font;
 	font.loadFromFile("res/dpcomic.ttf");
@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
 	// Define some constants
 	int gameWidth = float(1280);
 	int gameHeight = float(720);
-	float simRatio = float(simVars.WIDTH) / float(simVars.HEIGHT);
+	float simRatio = float(simVars.nWidth) / float(simVars.HEIGHT);
 	float dispRatio = float(gameWidth) / float(gameHeight);
 	int framesBetweenAI = 10, framesBetweenFood = 10, currentAIframes = 0, secAI = 0, secFRAMES = 0, currentFoodFrames = 0, drawSkipFrames = 0, currentDrawFrames = 0;
 	sf::Vector2f lastBarrier(-1.f, -1.f);

@@ -82,6 +82,7 @@ void initializeSimVars(int argc, char* argv[], SimVars* simVars)
 	simVars->LINE_SIZE = 50;
 	simVars->TIME = 0;
 
+	//Parsing the command line options using cxxopts
 	cxxopts::Options options("volv", "Evolution simulator");
 
 	try {

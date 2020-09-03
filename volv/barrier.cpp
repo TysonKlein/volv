@@ -3,12 +3,12 @@
 Barrier::Barrier(float x, float y, float newRadius, SimVars* newSimvars)
 {
 	simVars = newSimvars;
-	radius = newRadius;
+	fRadius = newRadius;
 	location = buffer(sf::Vector2f(x, y), simVars);
 
 	circ.setFillColor(sf::Color(100, 100, 100));
 	circ.setPosition(location);
-	circ.setRadius(radius);
+	circ.setRadius(fRadius);
 	circ.setOrigin(sf::Vector2f(radius, radius));
 	circ.setPointCount(5 + rand() % 10);
 	circ.rotate(rand() % 360);

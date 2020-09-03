@@ -9,14 +9,14 @@ void linkedList::insert(Organism* newOrg)
 {
 	list.push_back(newOrg);
 }
-void linkedList::insertFood(Food* newFood)
+void linkedList::insert(Food* newFood)
 {
 	if (newFood->MEAT)
 		meatFoodList.push_back(newFood);
 	else
 		plantFoodList.push_back(newFood);
 }
-void linkedList::insertBarrier(Barrier * newBarrier)
+void linkedList::insert(Barrier * newBarrier)
 {
 	barrierList.push_back(newBarrier);
 }
@@ -24,13 +24,36 @@ bool linkedList::remove(Organism* oldOrg) //Remove orgnism from the SEGMENT
 {
 	for (int i = 0; i < list.size(); i++)//Iterate through the list of organisms for this segment
 	{
-		if (list[i]->ID == oldOrg->ID)//If the organism has the correct ID
+		if (list[i]->nID == oldOrg->nID)//If the organism has the correct ID
 		{
 			list.erase(list.begin() + i);//Remove it
 			return true;
 		}
 	}
 	return false;
+}
+void linkedList::remove(Food* oldFood)
+{
+	if (oldFood->MEAT)
+	{
+		for (int i = 0; i < meatFoodList.size(); i++)
+		{
+			if (meatFoodList[i]->ID == oldFood->ID)
+			{
+				meatFoodList.erase(meatFoodList.begin() + i);
+			}
+		}
+	}
+	else
+	{
+		for (int i = 0; i < plantFoodList.size(); i++)
+		{
+			if (plantFoodList[i]->ID == oldFood->ID)
+			{
+				plantFoodList.erase(plantFoodList.begin() + i);
+			}
+		}
+	}
 }
 void linkedList::kill(Organism* oldOrg, linkedList** LL) //Kill a specific organism from a SEGMENT, spawn food in its place
 {
@@ -123,29 +146,7 @@ void linkedList::breed(Organism* oldOrg, linkedList** LL)
 	LL[int(org->location.y / simVars->COLLIDE_SQUARE_SIZE)][int(org->location.x / simVars->COLLIDE_SQUARE_SIZE)].insert(org);
 	drawList->insert(org);
 }
-void linkedList::removeFood(Food* oldFood)
-{
-	if (oldFood->MEAT)
-	{
-		for (int i = 0; i < meatFoodList.size(); i++)
-		{
-			if (meatFoodList[i]->ID == oldFood->ID)
-			{
-				meatFoodList.erase(meatFoodList.begin() + i);
-			}
-		}
-	}
-	else
-	{
-		for (int i = 0; i < plantFoodList.size(); i++)
-		{
-			if (plantFoodList[i]->ID == oldFood->ID)
-			{
-				plantFoodList.erase(plantFoodList.begin() + i);
-			}
-		}
-	}
-}
+
 void linkedList::draw(sf::RenderWindow * window)
 {
 	window->draw(rect);
