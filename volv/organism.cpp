@@ -583,31 +583,31 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 	//ATTACKING
 	if (state == ATTACK)
 	{
-		collideFactor = Collides(org_tastiest->location, location, org_tastiest->radius, radius);
+		collideFactor = Collides(props.org_tastiest, this);
 
 		if (collideFactor > 0.0001f)
 		{
-			if (LIFESTAGE == 1)
+			if (props.nLifestage == 1)
 			{
-				org_tastiest->vitality -= attack * timeFactor;
-				org_tastiest->killed = true;
+				props.org_tastiest->props.fVitality -= props.fAttack * timeFactor;
+				props.org_tastiest->props.bKilled = true;
 			}
 			else
 			{
-				org_tastiest->vitality -= 0.3f*attack*timeFactor;
-				org_tastiest->killed = true;
+				props.org_tastiest->props.fVitality -= 0.3f* props.fAttack*timeFactor;
+				props.org_tastiest->props.bKilled = true;
 			}
 		}
 
-		GO_TO = org_tastiest->location;
+		GO_TO = props.org_tastiest->getLocation();
 	}
 
 	//MATING
 	if (state == MATE)
 	{
-		GO_TO = org_sexiest->location;
+		GO_TO = props.org_sexiest->location;
 
-		collideFactor = Collides(org_sexiest->location, location, org_sexiest->radius, radius);
+		collideFactor = Collides(props.org_sexiest, this);
 
 		if (collideFactor > 0.0001f)
 		{
