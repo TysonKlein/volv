@@ -1,15 +1,15 @@
 #include "header.hpp"
 
-Barrier::Barrier(float x, float y, float newRadius, SimVars* newSimvars)
+Barrier::Barrier(float x, float y, float newRadius, Settings* newsettings)
 {
-	simVars = newSimvars;
+	settings = newsettings;
 	fRadius = newRadius;
-	location = buffer(sf::Vector2f(x, y), simVars);
+	location = buffer(sf::Vector2f(x, y), settings);
 
 	circ.setFillColor(sf::Color(100, 100, 100));
 	circ.setPosition(location);
 	circ.setRadius(fRadius);
-	circ.setOrigin(sf::Vector2f(radius, radius));
+	circ.setOrigin(sf::Vector2f(fRadius, fRadius));
 	circ.setPointCount(5 + rand() % 10);
 	circ.rotate(rand() % 360);
 }
@@ -20,21 +20,21 @@ void Barrier::removeFood(linkedList** LL)
 	{
 		for (int y = -1; y < 2; y++)
 		{
-			if (int(location.y / simVars->COLLIDE_SQUARE_SIZE + y) >= 0 && int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x >= 0 && int(location.y / simVars->COLLIDE_SQUARE_SIZE + y) < simVars->HEIGHT / simVars->COLLIDE_SQUARE_SIZE + 1 && int(location.x / simVars->COLLIDE_SQUARE_SIZE + x) < simVars->WIDTH / simVars->COLLIDE_SQUARE_SIZE + 1)
+			if (isInBounds(location, settings, x, y))
 			{
-				for (int k = 0; k < LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].plantFoodList.size(); k++)
+				for (int k = 0; k < LLfromArray(LL, location, settings, x, y)->plantFoodList.size(); k++)
 				{
-					if (Collides(LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].plantFoodList[k]->location, location, 2.f, radius) > 0.001f)
+					if (Collides(LLfromArray(LL, location, settings, x, y)->plantFoodList[k], this) > 0.001f)
 					{
-						LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].removeFood(LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].plantFoodList[k]);
+						LLfromArray(LL, location, settings, x, y)->remove(LLfromArray(LL, location, settings, x, y)->plantFoodList[k]);
 					}
 				}
 
-				for (int k = 0; k < LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].meatFoodList.size(); k++)
+				for (int k = 0; k < LLfromArray(LL, location, settings, x, y)->meatFoodList.size(); k++)
 				{
-					if (Collides(LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].meatFoodList[k]->location, location, 2.f, radius) > 0.001f)
+					if (Collides(LLfromArray(LL, location, settings, x, y)->meatFoodList[k], this) > 0.001f)
 					{
-						LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].removeFood(LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].meatFoodList[k]);
+						LLfromArray(LL, location, settings, x, y)->remove(LLfromArray(LL, location, settings, x, y)->meatFoodList[k]);
 					}
 				}
 			}

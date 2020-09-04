@@ -7,11 +7,11 @@ linkedList::linkedList()
 }
 void linkedList::insert(Organism* newOrg)
 {
-	list.push_back(newOrg);
+	organismList.push_back(newOrg);
 }
 void linkedList::insert(Food* newFood)
 {
-	if (newFood->MEAT)
+	if (newFood->bMeat)
 		meatFoodList.push_back(newFood);
 	else
 		plantFoodList.push_back(newFood);
@@ -22,11 +22,11 @@ void linkedList::insert(Barrier * newBarrier)
 }
 bool linkedList::remove(Organism* oldOrg) //Remove orgnism from the SEGMENT
 {
-	for (int i = 0; i < list.size(); i++)//Iterate through the list of organisms for this segment
+	for (int i = 0; i < organismList.size(); i++)//Iterate through the list of organisms for this segment
 	{
-		if (list[i]->nID == oldOrg->nID)//If the organism has the correct ID
+		if (organismList[i]->props.nID == oldOrg->props.nID)//If the organism has the correct ID
 		{
-			list.erase(list.begin() + i);//Remove it
+			organismList.erase(organismList.begin() + i);//Remove it
 			return true;
 		}
 	}
@@ -34,7 +34,7 @@ bool linkedList::remove(Organism* oldOrg) //Remove orgnism from the SEGMENT
 }
 void linkedList::remove(Food* oldFood)
 {
-	if (oldFood->MEAT)
+	if (oldFood->bMeat)
 	{
 		for (int i = 0; i < meatFoodList.size(); i++)
 		{
@@ -57,20 +57,19 @@ void linkedList::remove(Food* oldFood)
 }
 void linkedList::kill(Organism* oldOrg, linkedList** LL) //Kill a specific organism from a SEGMENT, spawn food in its place
 {
-	for (int i = 0; i < oldOrg->maxVitality*0.05f / (15 + 15 * int(oldOrg->virus) + oldOrg->DNA[2]); i++)
+	for (int i = 0; i < oldOrg->fMaxOrgValue[ORG_VALUES::VITALITY] *0.05f / (15 + 15 * int(oldOrg->virus) + oldOrg->DNA[2]); i++)
 	{
-		sf::Vector2f pos = oldOrg->location;
-		pos.x += float(rand() % 100) / 50.0f*oldOrg->radius - oldOrg->radius;
-		pos.y += float(rand() % 100) / 50.0f*oldOrg->radius - oldOrg->radius;
-		pos = buffer(pos, simVars);
-		Food* food = new Food(pos, simVars);
-		if (oldOrg->killed || rand() % 8 == 0)
-		{
-			food->setKilled();
-		}
-		LL[int(pos.y / simVars->COLLIDE_SQUARE_SIZE)][int(pos.x / simVars->COLLIDE_SQUARE_SIZE)].insertFood(food);
+		sf::Vector2f pos = oldOrg->getLocation();
+
+		pos.x += float(rand() % 100) / 50.0f*oldOrg->getRadius() - oldOrg->getRadius();
+		pos.y += float(rand() % 100) / 50.0f*oldOrg->getRadius() - oldOrg->getRadius();
+		pos = buffer(pos, settings);
+
+		Food* food = new Food(pos, settings, oldOrg->killed || rand() % 8 == 0);
+
+		LLfromArray(LL, pos, settings, 0, 0)->insert(food);	
 	}
-	if (LL[int(oldOrg->location.y / simVars->COLLIDE_SQUARE_SIZE)][int(oldOrg->location.x / simVars->COLLIDE_SQUARE_SIZE)].remove(oldOrg))
+	if (LLfromArray(LL, oldOrg->getLocation(), settings, 0, 0)->remove(oldOrg))
 	{
 		drawList->remove(oldOrg);
 		oldOrg->die();
@@ -140,10 +139,10 @@ void linkedList::breed(Organism* oldOrg, linkedList** LL)
 
 	oldOrg->BREED = false;
 
-	Organism* org = new Organism(sf::Vector2f((oldOrg->breedLoc.x + oldOrg->location.x) / 2.f, (oldOrg->breedLoc.y + oldOrg->location.y) / 2.f), newDNA, simVars);
+	Organism* org = new Organism(sf::Vector2f((oldOrg->breedLoc.x + oldOrg->location.x) / 2.f, (oldOrg->breedLoc.y + oldOrg->location.y) / 2.f), newDNA, settings);
 	org->maxBreed = parentA;
 	org->generation = oldOrg->generation + 1;
-	LL[int(org->location.y / simVars->COLLIDE_SQUARE_SIZE)][int(org->location.x / simVars->COLLIDE_SQUARE_SIZE)].insert(org);
+	LL[int(org->location.y / settings->COLLIDE_SQUARE_SIZE)][int(org->location.x / settings->COLLIDE_SQUARE_SIZE)].insert(org);
 	drawList->insert(org);
 }
 
@@ -171,10 +170,10 @@ void linkedList::drawBarrier(sf::RenderWindow * window)
 }
 void linkedList::drawOrganisms(sf::RenderWindow * window)
 {
-	for (std::vector<Organism*>::iterator it = list.begin(); it != list.end(); it++)
+	for (std::vector<Organism*>::iterator it = organismList.begin(); it != organismList.end(); it++)
 	{
 		(*it)->Draw(window);
-		if (simVars->DEVMODE)
+		if (settings->DEVMODE)
 			(*it)->displayCollisions(window);
 	}
 }

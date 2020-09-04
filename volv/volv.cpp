@@ -3,23 +3,23 @@
 int main(int argc, char* argv[])
 {
 	//Setting vars from command line args
-	SimVars simVars;
-	initializeSimVars(argc, argv, &simVars);
+	Settings settings;
+	initializesettings(argc, argv, &settings);
 	
-	std::srand(simVars.nSeed);
+	std::srand(settings.nSeed);
 
 	sf::Font font;
 	font.loadFromFile("res/dpcomic.ttf");
 	sf::Text timerTxt;
 	timerTxt.setFont(font);
-	timerTxt.setPosition(100, 100);
+	timerTxt.setPosition(100.f, 100.f);
 	timerTxt.scale(2.f, 2.f);
 	timerTxt.setString("HELLO");
 
 	// Define some constants
 	int gameWidth = float(1280);
 	int gameHeight = float(720);
-	float simRatio = float(simVars.nWidth) / float(simVars.HEIGHT);
+	float simRatio = float(settings.nWidth) / float(settings.HEIGHT);
 	float dispRatio = float(gameWidth) / float(gameHeight);
 	int framesBetweenAI = 10, framesBetweenFood = 10, currentAIframes = 0, secAI = 0, secFRAMES = 0, currentFoodFrames = 0, drawSkipFrames = 0, currentDrawFrames = 0;
 	sf::Vector2f lastBarrier(-1.f, -1.f);
@@ -27,14 +27,14 @@ int main(int argc, char* argv[])
 	// Create the window of the application
 	sf::RenderWindow window;
 
-	if (simVars.FULLSCREEN)
+	if (settings.FULLSCREEN)
 		window.create(sf::VideoMode::getFullscreenModes().front(), "", sf::Style::Fullscreen);	
 	else
 		window.create(sf::VideoMode(gameWidth, gameHeight, 32), "", sf::Style::Default);
 
 	sf::View overView;
-	overView.setSize(simVars.WIDTH, simVars.HEIGHT);
-	overView.setCenter(simVars.WIDTH / 2, simVars.HEIGHT / 2);
+	overView.setSize(settings.WIDTH, settings.HEIGHT);
+	overView.setCenter(settings.WIDTH / 2, settings.HEIGHT / 2);
 
 	if (simRatio < dispRatio)
 	{
@@ -59,19 +59,19 @@ int main(int argc, char* argv[])
 	std::vector<Organism*>::iterator orgIt;
 
 	//Init both lists
-	LL = new linkedList*[simVars.HEIGHT / simVars.COLLIDE_SQUARE_SIZE + 1]();
+	LL = new linkedList*[settings.HEIGHT / settings.COLLIDE_SQUARE_SIZE + 1]();
 
-	for (int i = 0; i < simVars.HEIGHT / simVars.COLLIDE_SQUARE_SIZE + 1; i++)
+	for (int i = 0; i < settings.HEIGHT / settings.COLLIDE_SQUARE_SIZE + 1; i++)
 	{
-		LL[i] = new linkedList[simVars.WIDTH / simVars.COLLIDE_SQUARE_SIZE + 1]();
+		LL[i] = new linkedList[settings.WIDTH / settings.COLLIDE_SQUARE_SIZE + 1]();
 
-		for (int j = 0; j < simVars.WIDTH / simVars.COLLIDE_SQUARE_SIZE + 1; j++)
+		for (int j = 0; j < settings.WIDTH / settings.COLLIDE_SQUARE_SIZE + 1; j++)
 		{
 			LL[i][j].X = j;
 			LL[i][j].Y = i;
-			LL[i][j].simVars = &simVars;
-			LL[i][j].rect.setSize(sf::Vector2f(simVars.COLLIDE_SQUARE_SIZE, simVars.COLLIDE_SQUARE_SIZE));
-			LL[i][j].rect.setPosition(sf::Vector2f(simVars.COLLIDE_SQUARE_SIZE*j, simVars.COLLIDE_SQUARE_SIZE*i));
+			LL[i][j].settings = &settings;
+			LL[i][j].rect.setSize(sf::Vector2f(settings.COLLIDE_SQUARE_SIZE, settings.COLLIDE_SQUARE_SIZE));
+			LL[i][j].rect.setPosition(sf::Vector2f(settings.COLLIDE_SQUARE_SIZE*j, settings.COLLIDE_SQUARE_SIZE*i));
 			LL[i][j].rect.setOutlineThickness(2);
 			LL[i][j].rect.setFillColor(sf::Color(rand() % 20, rand() % 20, rand() % 20));
 			LL[i][j].rect.setOutlineColor(sf::Color(200, 0, 0, 50));
@@ -81,10 +81,10 @@ int main(int argc, char* argv[])
 
 	drawList.X = 0;
 	drawList.Y = 0;
-	drawList.simVars = &simVars;
+	drawList.settings = &settings;
 
 	//Add organisms
-	for (int i = 0; i < simVars.INIT_NUM_ORGANISMS; i++)
+	for (int i = 0; i < settings.INIT_NUM_ORGANISMS; i++)
 	{
 		int DNA[DNA_SIZE];
 		for (int i = 0; i < DNA_SIZE; i++)
@@ -94,23 +94,23 @@ int main(int argc, char* argv[])
 			else
 				DNA[i] = rand() % DNA_SIZE;
 		}
-		Organism* org = new Organism(sf::Vector2f((rand() % (simVars.WIDTH - 2 * int(simVars.Xbuff))) + simVars.Xbuff, (rand() % (simVars.HEIGHT - 2 * int(simVars.Ybuff))) + simVars.Ybuff), DNA, &simVars);
+		Organism* org = new Organism(sf::Vector2f((rand() % (settings.WIDTH - 2 * int(settings.Xbuff))) + settings.Xbuff, (rand() % (settings.HEIGHT - 2 * int(settings.Ybuff))) + settings.Ybuff), DNA, &settings);
 		org->generation = 0;
-		LL[int(org->location.y / simVars.COLLIDE_SQUARE_SIZE)][int(org->location.x / simVars.COLLIDE_SQUARE_SIZE)].insert(org);
+		LL[int(org->location.y / settings.COLLIDE_SQUARE_SIZE)][int(org->location.x / settings.COLLIDE_SQUARE_SIZE)].insert(org);
 		drawList.insert(org);
 	}
 
 	//Add initial food
 	if (true)
 	{
-		for (int i = 0; i < int(float(simVars.WIDTH*simVars.HEIGHT*simVars.FOODRATE) / 150000.f); i++)
+		for (int i = 0; i < int(float(settings.WIDTH*settings.HEIGHT*settings.FOODRATE) / 150000.f); i++)
 		{
 			if (rand() % 20 == 0)
 			{
-				sf::Vector2f pos((rand() % (simVars.WIDTH - 2 * int(simVars.Xbuff))) + simVars.Xbuff, (rand() % (simVars.HEIGHT - 2 * int(simVars.Ybuff))) + simVars.Ybuff);
-				pos = buffer(pos, &simVars);
-				Food* food = new Food(pos, &simVars);
-				LL[int(pos.y / simVars.COLLIDE_SQUARE_SIZE)][int(pos.x / simVars.COLLIDE_SQUARE_SIZE)].insertFood(food);
+				sf::Vector2f pos((rand() % (settings.WIDTH - 2 * int(settings.Xbuff))) + settings.Xbuff, (rand() % (settings.HEIGHT - 2 * int(settings.Ybuff))) + settings.Ybuff);
+				pos = buffer(pos, &settings);
+				Food* food = new Food(pos, &settings);
+				LL[int(pos.y / settings.COLLIDE_SQUARE_SIZE)][int(pos.x / settings.COLLIDE_SQUARE_SIZE)].insertFood(food);
 			}
 		}
 	}
@@ -146,12 +146,12 @@ int main(int argc, char* argv[])
 			// Space key pressed: play
 			if ((event.type == sf::Event::KeyPressed) && (event.key.code == sf::Keyboard::Space))
 			{
-				simVars.DEVMODE = !simVars.DEVMODE;
+				settings.DEVMODE = !settings.DEVMODE;
 			}
 
 			if ((event.type == sf::Event::KeyPressed) && (event.key.code == sf::Keyboard::U))
 			{
-				simVars.UNLIMIED_FRAMERATE = !simVars.UNLIMIED_FRAMERATE;
+				settings.UNLIMIED_FRAMERATE = !settings.UNLIMIED_FRAMERATE;
 			}
 
 			if ((event.type == sf::Event::MouseButtonPressed) && (event.mouseButton.button == sf::Mouse::Left))
@@ -165,8 +165,8 @@ int main(int argc, char* argv[])
 						DNA[i] = 0;
 					}
 				}
-				org = new Organism(sf::Vector2f(sf::Mouse::getPosition(window).x*simVars.HEIGHT / gameHeight, sf::Mouse::getPosition(window).y*simVars.HEIGHT / gameHeight), DNA, &simVars);
-				LL[int(org->location.y / simVars.COLLIDE_SQUARE_SIZE)][int(org->location.x / simVars.COLLIDE_SQUARE_SIZE)].insert(org);
+				org = new Organism(sf::Vector2f(sf::Mouse::getPosition(window).x*settings.HEIGHT / gameHeight, sf::Mouse::getPosition(window).y*settings.HEIGHT / gameHeight), DNA, &settings);
+				LL[int(org->location.y / settings.COLLIDE_SQUARE_SIZE)][int(org->location.x / settings.COLLIDE_SQUARE_SIZE)].insert(org);
 				drawList.insert(org);
 			}
 			if ((event.type == sf::Event::MouseButtonPressed) && (event.mouseButton.button == sf::Mouse::Right))
@@ -185,8 +185,8 @@ int main(int argc, char* argv[])
 			if (vectorDistance(lastBarrier, sf::Vector2f(sf::Mouse::getPosition(window).x, sf::Mouse::getPosition(window).y)) > 10.f)
 			{
 				lastBarrier = sf::Vector2f(sf::Mouse::getPosition(window).x, sf::Mouse::getPosition(window).y);
-				Barrier* bar = new Barrier(sf::Mouse::getPosition(window).x*simVars.HEIGHT / gameHeight, sf::Mouse::getPosition(window).y*simVars.HEIGHT / gameHeight, float(simVars.COLLIDE_SQUARE_SIZE/2), &simVars);
-				LL[int(bar->location.y / simVars.COLLIDE_SQUARE_SIZE)][int(bar->location.x / simVars.COLLIDE_SQUARE_SIZE)].insertBarrier(bar);
+				Barrier* bar = new Barrier(sf::Mouse::getPosition(window).x*settings.HEIGHT / gameHeight, sf::Mouse::getPosition(window).y*settings.HEIGHT / gameHeight, float(settings.COLLIDE_SQUARE_SIZE/2), &settings);
+				LL[int(bar->location.y / settings.COLLIDE_SQUARE_SIZE)][int(bar->location.x / settings.COLLIDE_SQUARE_SIZE)].insertBarrier(bar);
 			}
 		}
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -202,20 +202,20 @@ int main(int argc, char* argv[])
 				secFRAMES = 0;
 			}
 
-			if (AITimer.getElapsedTime() > AITime || simVars.UNLIMIED_FRAMERATE)
+			if (AITimer.getElapsedTime() > AITime || settings.UNLIMIED_FRAMERATE)
 			{
-				simVars.TIME++;
+				settings.TIME++;
 				secFRAMES++;
 				AITimer.restart();
 
 				if (framesBetweenAI == currentAIframes)
 				{
 					secAI++;
-					for (int i = 0; i < simVars.HEIGHT / simVars.COLLIDE_SQUARE_SIZE + 1; i++)
+					for (int i = 0; i < settings.HEIGHT / settings.COLLIDE_SQUARE_SIZE + 1; i++)
 					{
-						for (int j = 0; j < simVars.WIDTH / simVars.COLLIDE_SQUARE_SIZE + 1; j++)
+						for (int j = 0; j < settings.WIDTH / settings.COLLIDE_SQUARE_SIZE + 1; j++)
 						{
-							for (orgIt = LL[i][j].list.begin(); orgIt != LL[i][j].list.end(); orgIt++)
+							for (orgIt = LL[i][j].organismList.begin(); orgIt != LL[i][j].organismList.end(); orgIt++)
 							{
 								(*orgIt)->AI((*orgIt)->ID, LL, float(framesBetweenAI));
 							}
@@ -235,15 +235,15 @@ int main(int argc, char* argv[])
 
 				if (framesBetweenFood == currentFoodFrames)
 				{
-					for (int i = 0; i < simVars.WIDTH * simVars.HEIGHT * simVars.FOODRATE / 500000 + 1; i++)
+					for (int i = 0; i < settings.WIDTH * settings.HEIGHT * settings.FOODRATE / 500000 + 1; i++)
 					{
 						if (rand() % 200 == 0)
 						{
-							sf::Vector2f pos(simVars.Xbuff + rand() % int(simVars.WIDTH - 2 * simVars.Xbuff), simVars.Ybuff + rand() % int(simVars.HEIGHT - 2 * simVars.Ybuff));
-							pos = buffer(pos, &simVars);
+							sf::Vector2f pos(settings.Xbuff + rand() % int(settings.WIDTH - 2 * settings.Xbuff), settings.Ybuff + rand() % int(settings.HEIGHT - 2 * settings.Ybuff));
+							pos = buffer(pos, &settings);
 							
-							Food* food = new Food(pos, &simVars);
-							LL[int(pos.y / simVars.COLLIDE_SQUARE_SIZE)][int(pos.x / simVars.COLLIDE_SQUARE_SIZE)].insertFood(food);
+							Food* food = new Food(pos, &settings);
+							LL[int(pos.y / settings.COLLIDE_SQUARE_SIZE)][int(pos.x / settings.COLLIDE_SQUARE_SIZE)].insertFood(food);
 						}
 					}
 					currentFoodFrames = 0;
@@ -253,26 +253,26 @@ int main(int argc, char* argv[])
 					currentFoodFrames++;
 				}
 
-				for (int i = 0; i < simVars.HEIGHT / simVars.COLLIDE_SQUARE_SIZE + 1; i++)
+				for (int i = 0; i < settings.HEIGHT / settings.COLLIDE_SQUARE_SIZE + 1; i++)
 				{
-					for (int j = 0; j < simVars.WIDTH / simVars.COLLIDE_SQUARE_SIZE + 1; j++)
+					for (int j = 0; j < settings.WIDTH / settings.COLLIDE_SQUARE_SIZE + 1; j++)
 					{
-						for (int k = 0; k < LL[i][j].list.size(); k++)
+						for (int k = 0; k < LL[i][j].organismList.size(); k++)
 						{
-							if (LL[i][j].list[k]->vitality < 0.f || LL[i][j].list[k]->LIFESPAN <= simVars.TIME - LL[i][j].list[k]->BORN)
+							if (LL[i][j].organismList[k]->vitality < 0.f || LL[i][j].organismList[k]->LIFESPAN <= settings.TIME - LL[i][j].organismList[k]->BORN)
 							{
-								LL[i][j].kill(LL[i][j].list[k], LL);
+								LL[i][j].kill(LL[i][j].organismList[k], LL);
 							}
 							else {
-								LL[i][j].list[k]->changeVelocity(1.f);
-								LL[i][j].list[k]->move(LL, 1.f);
+								LL[i][j].organismList[k]->changeVelocity(1.f);
+								LL[i][j].organismList[k]->move(LL, 1.f);
 							}
 						}
-						for (int k = 0; k < LL[i][j].list.size(); k++)
+						for (int k = 0; k < LL[i][j].organismList.size(); k++)
 						{
-							if (LL[i][j].list[k]->BREED)
+							if (LL[i][j].organismList[k]->BREED)
 							{
-								LL[i][j].breed(LL[i][j].list[k], LL);
+								LL[i][j].breed(LL[i][j].organismList[k], LL);
 							}
 						}
 					}
@@ -298,20 +298,20 @@ int main(int argc, char* argv[])
 				window.clear(sf::Color(0, 0, 0));
 
 				//Draw in order -> Dev_squares, food, organisms
-				if (simVars.DEVMODE)
+				if (settings.DEVMODE)
 				{
-					for (int i = 0; i < simVars.HEIGHT / simVars.COLLIDE_SQUARE_SIZE + 1; i++)
+					for (int i = 0; i < settings.HEIGHT / settings.COLLIDE_SQUARE_SIZE + 1; i++)
 					{
-						for (int j = 0; j < simVars.WIDTH / simVars.COLLIDE_SQUARE_SIZE + 1; j++)
+						for (int j = 0; j < settings.WIDTH / settings.COLLIDE_SQUARE_SIZE + 1; j++)
 						{
 							LL[i][j].draw(&window);
 						}
 					}
 				}
 
-				for (int i = 0; i < simVars.HEIGHT / simVars.COLLIDE_SQUARE_SIZE + 1; i++)
+				for (int i = 0; i < settings.HEIGHT / settings.COLLIDE_SQUARE_SIZE + 1; i++)
 				{
-					for (int j = 0; j < simVars.WIDTH / simVars.COLLIDE_SQUARE_SIZE + 1; j++)
+					for (int j = 0; j < settings.WIDTH / settings.COLLIDE_SQUARE_SIZE + 1; j++)
 					{
 						LL[i][j].drawFood(&window);
 						LL[i][j].drawBarrier(&window);
@@ -321,9 +321,9 @@ int main(int argc, char* argv[])
 
 				drawList.drawOrganisms(&window);
 
-				std::string s = std::to_string(int(float(simVars.TIME)*AITime.asSeconds())%60);
-				std::string m = std::to_string(int(float(simVars.TIME/60)*AITime.asSeconds())%60);
-				std::string h = std::to_string(int(float(simVars.TIME/3600)*AITime.asSeconds()));
+				std::string s = std::to_string(int(float(settings.TIME)*AITime.asSeconds())%60);
+				std::string m = std::to_string(int(float(settings.TIME/60)*AITime.asSeconds())%60);
+				std::string h = std::to_string(int(float(settings.TIME/3600)*AITime.asSeconds()));
 
 				if (s.length() == 1)
 				{

@@ -1,122 +1,122 @@
 #include "header.hpp"
 
-Organism::Organism(sf::Vector2f LOC, int newDNA[], SimVars* newSimVars)
+Organism::Organism(sf::Vector2f LOC, int newDNA[], Settings* newsettings)
 {
-	simVars = newSimVars;
+	settings = newsettings;
 
 	//Set DNA for organism
 	for (int i = 0; i < DNA_SIZE; i++)
 	{
-		DNA[i] = newDNA[i];
+		props.DNA[i] = newDNA[i];
 	}
 
 	//set all DNA-dictated variables
-	radius = valFromDNA(DNA, 2.0f, 4.f, 628745.1386f)*valFromDNA(DNA, 3.0f, 4.f, 52323.3523f)*valFromDNA(DNA, 2.0f, 5.f, 8965245.345f);
-	maxSpeed = 1.3f * sqrt(sqrt((valFromDNA(DNA, 8.f, 140.f, 12051.9862f))) / (radius*radius));
-	attack = (5.f + valFromDNA(DNA, 0.f, 40.f, 161205.f))*radius*radius / 1420.f;
-	immunity = valFromDNA(DNA, 1500.f, 10000.f, 7862387.234);
-	scaredness = valFromDNA(DNA, 0.f, 20.f, 896134.423f);
-	hungerLevel = valFromDNA(DNA, 10.f, 40.f, 6712876.f);
-	maxVitality = (valFromDNA(DNA, 0.f, 40.f, 123785.532f) + 10.f) * radius * radius / 15.f;
-	metabolism = (valFromDNA(DNA, 0.f, 10.f, 58726.1235f)*0.004f)*sqrt(sqrt(maxSpeed));
-	mateWait = valFromDNA(DNA, 30.f, 100.f, 815623.5196f);
-	LIFESPAN = 2.f * radius / metabolism * (valFromDNA(DNA, 0.f, 30.f, 862375.123f) + 10.f);
-	vision = std::min(valFromDNA(DNA, 2.f*radius, 10.f*radius, 815623.5196f), float(simVars->COLLIDE_SQUARE_SIZE));
+	fRadius = valFromDNA(props.DNA, 2.0f, 4.f, 628745.1386f)*valFromDNA(props.DNA, 3.0f, 4.f, 52323.3523f)*valFromDNA(props.DNA, 2.0f, 5.f, 8965245.345f);
+	props.fMaxSpeed = 1.3f * sqrt(sqrt((valFromDNA(props.DNA, 8.f, 140.f, 12051.9862f))) / (fRadius * fRadius));
+	props.fAttack = (5.f + valFromDNA(props.DNA, 0.f, 40.f, 161205.f))*fRadius*fRadius / 1420.f;
+	props.fImmunity = valFromDNA(props.DNA, 1500.f, 10000.f, 7862387.234);
+	props.fScaredness = valFromDNA(props.DNA, 0.f, 20.f, 896134.423f);
+	props.fHunger = valFromDNA(props.DNA, 10.f, 40.f, 6712876.f);
+	props.fMaxVitality = (valFromDNA(props.DNA, 0.f, 40.f, 123785.532f) + 10.f) * fRadius * fRadius / 15.f;
+	props.fMetabolism = (valFromDNA(props.DNA, 0.f, 10.f, 58726.1235f)*0.004f)*sqrt(sqrt(props.fMaxSpeed));
+	props.fMatingCooldown = valFromDNA(props.DNA, 30.f, 100.f, 815623.5196f);
+	props.nLifespan = 2.f * fRadius / props.fMetabolism * (valFromDNA(props.DNA, 0.f, 30.f, 862375.123f) + 10.f);
+	props.fVision = std::min(valFromDNA(props.DNA, 2.f*fRadius, 10.f*fRadius, 815623.5196f), float(settings->nCollisionSquareSize));
 
-	bodyColor.b = valFromDNA(DNA, 0.f, 255.f, 642624.6643f);
-	bodyColor.g = valFromDNA(DNA, 0.f, 255.f, 236506.5472f);
-	bodyColor.r = valFromDNA(DNA, 0.f, 255.f, 819637.0018f);
+	bodyColor.b = valFromDNA(props.DNA, 0.f, 255.f, 642624.6643f);
+	bodyColor.g = valFromDNA(props.DNA, 0.f, 255.f, 236506.5472f);
+	bodyColor.r = valFromDNA(props.DNA, 0.f, 255.f, 819637.0018f);
 	bodyColor.a = 160;
 
-	outlineColor.r = valFromDNA(DNA, 0.f, 255.f, 926.16413f);
-	outlineColor.g = valFromDNA(DNA, 0.f, 255.f, 1810.35235f);
-	outlineColor.b = valFromDNA(DNA, 0.f, 255.f, 52566.102365f);
+	outlineColor.r = valFromDNA(props.DNA, 0.f, 255.f, 926.16413f);
+	outlineColor.g = valFromDNA(props.DNA, 0.f, 255.f, 1810.35235f);
+	outlineColor.b = valFromDNA(props.DNA, 0.f, 255.f, 52566.102365f);
 	outlineColor.a = 160;
 
 	//Set other variables
-	BORN = simVars->TIME;
-	NEXT_MATE = BORN;
-	BREED = false;
-	LEADER = false;
-	maxBreed = DNA_SIZE;
-	LIFESTAGE = 0;
-	roamAngle = float(rand() % 10000) / 10000.f / 3.14f * 180.f;
-	incHap = false;
-	virus = false;
-	maxBreedingDiff = DNA_SIZE;
+	props.nBirthday = settings->nTime;
+	props.nTimeOfNextMate = props.nBirthday;
+	props.bBreed = false;
+	props.bLeader = false;
+	props.fBreed = DNA_SIZE;
+	props.nLifestage = 0;
+	props.fRoamAngle = float(rand() % 10000) / 10000.f / 3.14f * 180.f;
+	props.bIncreaseHappiness = false;
+	props.bVirus = false;
+	props.nMaxBreedingDifference = DNA_SIZE;
 	location = LOC;
 	desiredLocation = location;
-	rotation = 0;
-	repel.x = 0;
-	repel.y = 0;
-	happiness = 0.f;
-	killed = false;
-	vitality = maxVitality;
-	maxEnergy = maxVitality;
-	energy = 0.5f*maxEnergy;
-	producer = false;
+	props.fRotation = 0.f;
+	repel.x = 0.f;
+	repel.y = 0.f;
+	props.fHappiness = 0.f;
+	props.bKilled = false;
+	props.fVitality = props.fMaxVitality;
+	props.fMaxEnergy = props.fMaxVitality;
+	props.fEnergy = 0.5f* props.fMaxEnergy;
+	props.bProducer = false;
 	
 	//Determine organism characteristics from these variables
-	if (scaredness > 5.f)
+	if (props.fScaredness > 5.f)
 	{
-		DEFENSIVE = true;
-		attack *= 1.5f;
-		maxVitality *= 1.3f;
+		props.bDefensive = true;
+		props.fAttack *= 1.5f;
+		props.fMaxVitality *= 1.3f;
 	}
 	else
-		DEFENSIVE = false;
+		props.bDefensive = false;
 
-	if (valFromDNA(DNA, 0.f, 25.f, 78183.43f) > 20.f) //Set Aggro
+	if (valFromDNA(props.DNA, 0.f, 25.f, 78183.43f) > 20.f) //Set Aggro
 	{
-		Aggro = true;
-		displayType = 1;
-		maxVitality *= 1.5f;
-		maxSpeed *= 1.5f;
-		immunity /= 5.f;
+		props.bAggro = true;
+		props.nDisplayType = 1;
+		props.fMaxVitality *= 1.5f;
+		props.fMaxSpeed *= 1.5f;
+		props.fImmunity /= 5.f;
 	}
 	else
 	{
-		Aggro = false;
-		attack /= 2.f;
-		displayType = 0;
+		props.bAggro = false;
+		props.fAttack /= 2.f;
+		props.nDisplayType = 0;
 	}
 
-	if (DNA[DNA_SIZE-1] == 0)
+	if (props.DNA[DNA_SIZE-1] == 0)
 	{
-		radius *= 1.7;
+		fRadius *= 1.7;
 		bodyColor.g = 230;
 		bodyColor.r = 230;
 		bodyColor.b = 230;
-		metabolism = 0;
-		maxSpeed *= 0.01f;
-		producer = true;
-		displayType = 0;
+		props.fMetabolism = 0;
+		props.fMaxSpeed *= 0.01f;
+		props.bProducer = true;
+		props.nDisplayType = 0;
 	}
-	if (producer)
+	if (props.bProducer)
 	{
-		LIFESPAN *= 10000;
+		props.nLifespan *= 10000;
 	}
 
 	setBody();
 
-	ID = simVars->CURRENT_ORGANISM;
-	simVars->CURRENT_ORGANISM++;
+	props.nID = settings->nCurrentOrganism;
+	settings->nCurrentOrganism++;
 }
 
 void Organism::makeSick(Organism* other)
 {
 	for (int i = 0; i < DNA_SIZE; i++)
 	{
-		other->virusDNA[i] = virusDNA[i];
+		other->props.virusDNA[i] = props.virusDNA[i];
 	}
 
-	other->circ.setFillColor(sf::Color(valFromDNA(DNA, 0.f, 255.f, 642624.6643f),valFromDNA(DNA, 0.f, 255.f, 236506.5472f),valFromDNA(DNA, 0.f, 255.f, 819637.0018f)));
-	other->circ.setRadius(other->radius*0.25f);
+	other->circ.setFillColor(sf::Color(valFromDNA(props.DNA, 0.f, 255.f, 642624.6643f),valFromDNA(props.DNA, 0.f, 255.f, 236506.5472f),valFromDNA(props.DNA, 0.f, 255.f, 819637.0018f)));
+	other->circ.setRadius(other->fRadius*0.25f);
 	other->circ.setOutlineThickness(2);
-	other->circ.setOutlineColor(sf::Color(valFromDNA(DNA, 0.f, 255.f, 2934.f), valFromDNA(DNA, 0.f, 255.f, 10983784.f), valFromDNA(DNA, 0.f, 255.f, 1234.f)));
-	other->circ.setOrigin(sf::Vector2f(other->radius*0.25f, other->radius*0.25f));
+	other->circ.setOutlineColor(sf::Color(valFromDNA(props.DNA, 0.f, 255.f, 2934.f), valFromDNA(props.DNA, 0.f, 255.f, 10983784.f), valFromDNA(props.DNA, 0.f, 255.f, 1234.f)));
+	other->circ.setOrigin(sf::Vector2f(other->fRadius*0.25f, other->fRadius*0.25f));
 
-	other->virus = true;
+	other->props.bVirus = true;
 }
 
 void Organism::setBody()
@@ -124,23 +124,23 @@ void Organism::setBody()
 	// resize it to 5 points
 	float h, w;
 
-	w = radius * 1.7f;
+	w = fRadius * 1.7f;
 	h = w;
 
-	int N = int(valFromDNA(DNA, 0.f, 6.f, 3122.f)) + 2;
+	int N = int(valFromDNA(props.DNA, 0.f, 6.f, 3122.f)) + 2;
 
-	if (displayType == 0)
+	if (props.nDisplayType == 0)
 	{
 		basicBody.setFillColor(bodyColor);
-		basicBody.setRadius(radius);
-		if (!producer)
+		basicBody.setRadius(fRadius);
+		if (!props.bProducer)
 		{
-			basicBody.setPointCount(int(valFromDNA(DNA, 0.f, 50.f, 62341.f)) / 10 + 3);
+			basicBody.setPointCount(int(valFromDNA(props.DNA, 0.f, 50.f, 62341.f)) / 10 + 3);
 		}
-		basicBody.setOrigin(radius, radius);
+		basicBody.setOrigin(fRadius, fRadius);
 		basicBody.setPosition(location);
 		basicBody.setOutlineColor(outlineColor);
-		basicBody.setOutlineThickness(valFromDNA(DNA, 0.f, 6.f, 9237.f) / 2 + 1.f);
+		basicBody.setOutlineThickness(valFromDNA(props.DNA, 0.f, 6.f, 9237.f) / 2 + 1.f);
 	}
 	else
 	{
@@ -150,15 +150,15 @@ void Organism::setBody()
 
 		for (int i = 0; i < N; i++)
 		{
-			convexBody.setPoint(i, sf::Vector2f(i*h / float(N - 1), w / 2.f + float(DNA[i % DNA_SIZE] + 0.5*DNA_SIZE) / (1.5f*DNA_SIZE) * w / 2.f));
-			convexBody.setPoint(2 * N - i - 1, sf::Vector2f(i*h / float(N - 1), w / 2.f - float(DNA[i % DNA_SIZE] + 0.5*DNA_SIZE) / (1.5f*DNA_SIZE) * w / 2.f));
+			convexBody.setPoint(i, sf::Vector2f(i*h / float(N - 1), w / 2.f + float(props.DNA[i % DNA_SIZE] + 0.5*DNA_SIZE) / (1.5f*DNA_SIZE) * w / 2.f));
+			convexBody.setPoint(2 * N - i - 1, sf::Vector2f(i*h / float(N - 1), w / 2.f - float(props.DNA[i % DNA_SIZE] + 0.5*DNA_SIZE) / (1.5f*DNA_SIZE) * w / 2.f));
 		}
 
 		convexBody.setOrigin(h / 2.f, w / 2.f);
 		convexBody.setFillColor(bodyColor);
 		convexBody.setPosition(location);
 		convexBody.setOutlineColor(outlineColor);
-		convexBody.setOutlineThickness(valFromDNA(DNA, 0.f, 6.f, 9237.f) / 2 + 1.f);
+		convexBody.setOutlineThickness(valFromDNA(props.DNA, 0.f, 6.f, 9237.f) / 2 + 1.f);
 	}
 }
 
@@ -167,9 +167,9 @@ float Organism::getLikability(int DNA2[])
 	int total = 0;
 	for (int i = 0; i < 0.4f*DNA_SIZE; i++)
 	{
-		if (abs(DNA2[i] - DNA[i]) > 0.3f*DNA_SIZE)
+		if (abs(DNA2[i] - props.DNA[i]) > 0.3f*DNA_SIZE)
 		{
-			total -= abs(DNA2[i] - DNA[i]);
+			total -= abs(DNA2[i] - props.DNA[i]);
 		}
 		else
 		{
@@ -179,22 +179,12 @@ float Organism::getLikability(int DNA2[])
 	return float(total) * 10.f / 0.4f*float(DNA_SIZE);
 }
 
-sf::Vector2f Organism::getLocation()
-{
-	return location;
-}
-
-float Organism::getRadius()
-{
-	return radius;
-}
-
 int Organism::breedDiff(Organism* other)
 {
-	breedVar = 0;
+	int breedVar = 0;
 	for (int i = 0; i < DNA_SIZE; i++)
 	{
-		if (DNA[i] != other->DNA[i])
+		if (props.DNA[i] != other->props.DNA[i])
 			breedVar++;
 	}
 	return breedVar;
@@ -202,112 +192,109 @@ int Organism::breedDiff(Organism* other)
 
 void Organism::AI(int me, linkedList** LL, float timeFactor)
 {
-	float dir = 0, dir1 = 0, dir2 = 0, max = 0, min = 0, tempMax, tempMin, collideFactor, likeability, maxGoTo = 0, distFac;
-	bool changeDir = false;
-	incHap = false;
-	HUNGRY = false;
-	bool FOUND_FOOD = false;
+	AIprops.reset();
+	props.bIncreaseHappiness = false;
+	props.bHungry = false;
+	props.bKilled = false;
 
-	if (!(energy > maxEnergy*hungerLevel / 45.f))
+	if (!(props.fEnergy > props.fMaxEnergy* props.fHunger / 45.f))
 	{
-		HUNGRY = true;
+		props.bHungry = true;
 	}
-	int randChange = rand() % 360, breedSum = 0, diff, virusSum;
 
 	Organism* org;
-	org_scariest = nullptr;
-	org_youngest = nullptr;
-	org_sexiest = nullptr;
-	org_tastiest = nullptr;
-	org_weirdest = nullptr;
-	foo_closest = nullptr;
+	props.org_scariest = nullptr;
+	props.org_youngest = nullptr;
+	props.org_sexiest = nullptr;
+	props.org_tastiest = nullptr;
+	props.org_weirdest = nullptr;
+	props.foo_closest = nullptr;
 
 	repel = sf::Vector2f(0, 0);
 	sf::Vector2f foodDir, GO_TO = location;
 
-	energy -= metabolism * timeFactor;
-	if (virus)
+	props.fEnergy -= props.fMetabolism * timeFactor;
+	if (props.bVirus)
 	{
-		energy -= 1000.f*metabolism*timeFactor;
+		props.fEnergy -= 100.f* props.fMetabolism*timeFactor;
 	}
-	if (energy < 0.f)
+	if (props.fEnergy < 0.f)
 	{
-		energy = 0.f;
+		props.fEnergy = 0.f;
 	}
 
-	if (energy < 0.0001f)
+	if (props.fEnergy < 0.0001f)
 	{
-		vitality -= 20 * metabolism*timeFactor;
+		props.fVitality -= 20 * props.fMetabolism*timeFactor;
 	}
 	else
 	{
-		vitality += metabolism * timeFactor;
+		props.fVitality += props.fMetabolism * timeFactor;
 	}
-	if (vitality > maxVitality)
+	if (props.fVitality > props.fMaxVitality)
 	{
-		vitality = maxVitality;
-	}
-	killed = false;
-
-	happiness -= 0.5f*timeFactor;
-	if (happiness < 0)
-	{
-		happiness = 0;
+		props.fVitality = props.fMaxVitality;
 	}
 
-	if (producer) {
-		for (int i = 0; i < maxVitality*0.5f / (15 + DNA[2]); i++)
+	props.fHappiness -= 0.5f*timeFactor;
+	if (props.fHappiness < 0)
+	{
+		props.fHappiness = 0;
+	}
+
+	if (props.bProducer) {
+		for (int i = 0; i < props.fMaxVitality*0.5f / (15 + props.DNA[2]); i++)
 		{
 			if (rand() % (400) == 0)
 			{
 				float angle = float(rand() % 10000) / 10000.f / 3.14f * 180.f;
-				float distance = 2.2f*radius + float(rand() % 100);
+				float distance = 2.2f*fRadius + float(rand() % 100);
 
 				sf::Vector2f pos(location.x + std::cosf(angle)*distance, location.y + std::sinf(angle)*distance);
-				pos = buffer(pos, simVars);
+				pos = buffer(pos, settings);
 
-				Food* food = new Food(pos, simVars);
-				food->simVars = simVars;
+				Food* food = new Food(pos, settings, false);
+				food->settings = settings;
 
-				LL[int(pos.y / simVars->COLLIDE_SQUARE_SIZE)][int(pos.x / simVars->COLLIDE_SQUARE_SIZE)].insertFood(food);
-				energy -= 0.03f*timeFactor;
-				bodyColor.a = 255.f*energy*2.f / maxEnergy;
+				LLfromArray(LL, pos, settings, 0, 0)->insert(food);
+				props.fEnergy -= 0.03f*timeFactor;
+				bodyColor.a = 255.f* props.fEnergy*2.f / props.fMaxEnergy;
 				basicBody.setFillColor(bodyColor);
 			}
 		}
 	}
 
-	if (LIFESTAGE < 2)
+	if (props.nLifestage < 2)
 	{
-		if (LIFESTAGE == 0 && simVars->TIME - BORN > LIFESPAN*0.05f)
+		if (props.nLifestage == 0 && settings->nTime - props.nBirthday > props.nLifespan*0.05f)
 		{
-			LIFESTAGE = 1;
-			bodyColor.b = valFromDNA(DNA, 0.f, 215.f, 642624.6643f) + 40.f;
-			bodyColor.g = valFromDNA(DNA, 0.f, 215.f, 236506.5472f) + 40.f;
-			bodyColor.r = valFromDNA(DNA, 0.f, 215.f, 819637.0018f) + 40.f;
+			props.nLifestage = 1;
+			bodyColor.b = valFromDNA(props.DNA, 0.f, 215.f, 642624.6643f) + 40.f;
+			bodyColor.g = valFromDNA(props.DNA, 0.f, 215.f, 236506.5472f) + 40.f;
+			bodyColor.r = valFromDNA(props.DNA, 0.f, 215.f, 819637.0018f) + 40.f;
 
-			outlineColor.r = valFromDNA(DNA, 0.f, 215.f, 926.16413f) + 40.f;
-			outlineColor.g = valFromDNA(DNA, 0.f, 215.f, 1810.35235f) + 40.f;
-			outlineColor.b = valFromDNA(DNA, 0.f, 215.f, 52566.102365f) + 40.f;
+			outlineColor.r = valFromDNA(props.DNA, 0.f, 215.f, 926.16413f) + 40.f;
+			outlineColor.g = valFromDNA(props.DNA, 0.f, 215.f, 1810.35235f) + 40.f;
+			outlineColor.b = valFromDNA(props.DNA, 0.f, 215.f, 52566.102365f) + 40.f;
 
-			radius = radius * 1.5f;
+			fRadius = fRadius * 1.5f;
 
-			maxSpeed = maxSpeed / 1.2f;
+			props.fMaxSpeed = props.fMaxSpeed / 1.2f;
 
 			setBody();
 		}
-		else if (LIFESTAGE == 1 && simVars->TIME - BORN > LIFESPAN*0.8f)
+		else if (props.nLifestage == 1 && settings->nTime - props.nBirthday > props.nLifespan*0.8f)
 		{
-			LIFESTAGE = 2;
-			bodyColor.b = valFromDNA(DNA, 0.f, 100.f, 642624.6643f) + 140.f;
-			bodyColor.g = valFromDNA(DNA, 0.f, 100.f, 236506.5472f) + 140.f;
-			bodyColor.r = valFromDNA(DNA, 0.f, 100.f, 819637.0018f) + 140.f;
+			props.nLifestage = 2;
+			bodyColor.b = valFromDNA(props.DNA, 0.f, 100.f, 642624.6643f) + 140.f;
+			bodyColor.g = valFromDNA(props.DNA, 0.f, 100.f, 236506.5472f) + 140.f;
+			bodyColor.r = valFromDNA(props.DNA, 0.f, 100.f, 819637.0018f) + 140.f;
 
-			outlineColor.r = valFromDNA(DNA, 0.f, 100.f, 926.16413f) + 140.f;
-			outlineColor.g = valFromDNA(DNA, 0.f, 100.f, 1810.35235f) + 140.f;
-			outlineColor.b = valFromDNA(DNA, 0.f, 100.f, 52566.102365f) + 140.f;
+			outlineColor.r = valFromDNA(props.DNA, 0.f, 100.f, 926.16413f) + 140.f;
+			outlineColor.g = valFromDNA(props.DNA, 0.f, 100.f, 1810.35235f) + 140.f;
+			outlineColor.b = valFromDNA(props.DNA, 0.f, 100.f, 52566.102365f) + 140.f;
 
-			maxSpeed = maxSpeed / 1.2f;
+			props.fMaxSpeed = props.fMaxSpeed / 1.2f;
 
 			setBody();
 		}
@@ -315,60 +302,60 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 
 	checkFoodVicinity(0, 0, LL);
 
-	if (foo_closest != nullptr)
+	if (props.foo_closest != nullptr)
 	{
-		FOUND_FOOD = true;
+		AIprops.bFoundFood = true;
 	}
 
 	for (int x = -1; x < 2; x++)
 	{
 		for (int y = -1; y < 2; y++)
 		{
-			if (int(location.y / simVars->COLLIDE_SQUARE_SIZE + y) >= 0 && int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x >= 0 && int(location.y / simVars->COLLIDE_SQUARE_SIZE + y) < simVars->HEIGHT / simVars->COLLIDE_SQUARE_SIZE + 1 && int(location.x / simVars->COLLIDE_SQUARE_SIZE + x) < simVars->WIDTH / simVars->COLLIDE_SQUARE_SIZE + 1)
+			if (isInBounds(location, settings, x, y))
 			{
-				for (it = LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].list.begin(); it != LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].list.end(); it++)
+				for (orgIT = LLfromArray(LL, location, settings, x, y)->organismList.begin(); orgIT != LLfromArray(LL, location, settings, x, y)->organismList.end(); orgIT++)
 				{
-					if (vectorDistance((*it)->location, location) < vision && ID != (*it)->ID)//If it is a different organism
+					if (vectorDistance((*orgIT)->location, location) < props.fVision && props.nID != (*orgIT)->props.nID)//If it is a different organism
 					{
 						///////////////////////////////////////////////////////////////////
 						//INVOLUNTARY CONTACT CONSEQUENCES (viruses, repelling, breeding values)
 						///////////////////////////////////////////////////////////////////
-						collideFactor = Collides((*it)->location, location, (*it)->radius, radius);
+						AIprops.collideFactor = Collides((*orgIT), this);
 
-						if (collideFactor > 0.0001f) //If the organism is colliding
+						if (AIprops.collideFactor > 0.0001f) //If the organism is colliding
 						{
-							if (!(*it)->producer && !producer && virus && !(*it)->virus) //If I have a virus and other doesnt
+							if (!(*orgIT)->props.bProducer && !props.bProducer && props.bVirus && !(*orgIT)->props.bVirus) //If I have a virus and other doesnt
 							{
-								virusSum = 0;
+								AIprops.virusSum = 0;
 								for (int i = 0; i < DNA_SIZE; i++)
 								{
-									if (virusDNA[i] == (*it)->DNA[i])
+									if (props.virusDNA[i] == (*orgIT)->props.DNA[i])
 									{
-										virusSum++;
+										AIprops.virusSum++;
 									}
 								}
 
-								if (virusSum > 0.5f*DNA_SIZE) //if DNA is similar enough
+								if (AIprops.virusSum > 0.5f*DNA_SIZE) //if DNA is similar enough
 								{
-									virusSum += 1;
-									if (rand() % ((DNA_SIZE - virusSum)*(DNA_SIZE - virusSum) / 2 + 1) == 0)
+									AIprops.virusSum += 1;
+									if (rand() % ((DNA_SIZE - AIprops.virusSum)*(DNA_SIZE - AIprops.virusSum) / 2 + 1) == 0)
 									{
-										makeSick(*it);
+										makeSick(*orgIT);
 									}
 								}
 							}
 
 							//Repel from close organism
-							float radFac = (*it)->radius / radius;
+							float radFac = (*orgIT)->fRadius / fRadius;
 							radFac = radFac * radFac*radFac*radFac;
 
 							if (radFac > 1.f)
 								radFac = 1.f;
 
-							repel.x -= collideFactor * ((*it)->location.x - location.x)*radFac;
-							repel.y -= collideFactor * ((*it)->location.y - location.y)*radFac;
+							repel.x -= collideFactor * ((*orgIT)->location.x - location.x)*radFac;
+							repel.y -= collideFactor * ((*orgIT)->location.y - location.y)*radFac;
 
-							similarityUpdate((*it));
+							similarityUpdate((*orgIT));
 						}
 						///////////////////////////////////////////////////////////////////
 						///////////////////////////////////////////////////////////////////
@@ -379,53 +366,53 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 						///////////////////////////////////////////////////////////////////
 
 						//Determine the tastiest organism
-						if (tastiest(org_tastiest, (*it)))
+						if (tastiest(props.org_tastiest, (*orgIT)))
 						{
-							org_tastiest = (*it);
+							props.org_tastiest = (*orgIT);
 						}
 						//Determine the sexiest organism
-						if (sexiest(org_sexiest, (*it)))
+						if (sexiest(props.org_sexiest, (*orgIT)))
 						{
-							org_sexiest = (*it);
+							props.org_sexiest = (*orgIT);
 						}
 						//Determine the youngest organism
-						if (youngest(org_youngest, (*it)))
+						if (youngest(props.org_youngest, (*orgIT)))
 						{
-							org_youngest = (*it);
+							props.org_youngest = (*orgIT);
 						}
 						//Determine the scariest organism
-						if (scariest(org_scariest, (*it)))
+						if (scariest(props.org_scariest, (*orgIT)))
 						{
-							org_scariest = (*it);
+							props.org_scariest = (*orgIT);
 						}
 						//Determine the weirdest organism
-						if (weirdest(org_weirdest, (*it)))
+						if (weirdest(props.org_weirdest, (*orgIT)))
 						{
-							org_weirdest = (*it);
+							props.org_weirdest = (*orgIT);
 						}
 						///////////////////////////////////////////////////////////////////
 						///////////////////////////////////////////////////////////////////
 
-						if (!FOUND_FOOD && x != 0 && y != 0)
+						if (!bFoundFood && x != 0 && y != 0)
 						{
 							checkFoodVicinity(x, y, LL);
 
-							if (foo_closest != nullptr)
+							if (props.foo_closest != nullptr)
 							{
-								FOUND_FOOD = true;
+								bFoundFood = true;
 							}
 						}
 					}
 				}
-				for (bit = LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].barrierList.begin(); bit != LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].barrierList.end(); bit++)
+				for (barrierIT = LLfromArray(LL, location, settings, x, y)->barrierList.begin(); barrierIT != LLfromArray(LL, location, settings, x, y)->barrierList.end(); barrierIT++)
 				{
-					collideFactor = Collides((*bit)->location, location, (*bit)->radius, radius);
+					collideFactor = Collides((*barrierIT), this);
 
 					if (collideFactor > 0.0001f) //If the organism is colliding
 					{
 						//Repel
-						repel.x -= 2.f*collideFactor * ((*bit)->location.x - location.x);
-						repel.y -= 2.f*collideFactor * ((*bit)->location.y - location.y);
+						repel.x -= 2.f*collideFactor * ((*barrierIT)->getLocation().x - location.x);
+						repel.y -= 2.f*collideFactor * ((*barrierIT)->getLocation().y - location.y);
 					}
 				}
 			}
@@ -437,7 +424,7 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 	///////////////////////////////////////////////////////////////////
 
 	//IS OFFSPRING SAFE AND AM I NOT OFFSPRING?
-	if (org_youngest != nullptr && org_scariest != nullptr && org_youngest != org_scariest && LIFESTAGE != 0 && int(scaredness)%2 == 0)
+	if (props.org_youngest != nullptr && props.org_scariest != nullptr && props.org_youngest != props.org_scariest && props.nLifestage != 0 && int(props.fScaredness)%2 == 0)
 	{
 		//NO
 		state = PROTECT;
@@ -446,9 +433,9 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 	{
 		//YES
 		//AM I DEFENSIVE?
-		if (DEFENSIVE && org_weirdest != nullptr)
+		if (props.bDefensive && props.org_weirdest != nullptr)
 			state = DEFEND;
-		else if (org_scariest != nullptr)
+		else if (props.org_scariest != nullptr)
 		{
 			state = FLEE;
 		}
@@ -456,15 +443,15 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 		{
 			//YES
 			//AM I HUNGRY?
-			if (!HUNGRY)
+			if (!props.bHungry)
 			{
 				//NO
 				//AM I NEAR SOMEONE SIMILAR?
-				if (org_sexiest != nullptr && NEXT_MATE < simVars->TIME)
+				if (props.org_sexiest != nullptr && props.nTimeOfNextMate < settings->nTime)
 				{
 					//YES
 					//AM I YOUNG?
-					if (LIFESTAGE == 1)
+					if (props.nLifestage == 1)
 					{
 						state = MATE;
 					}
@@ -483,11 +470,11 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 			{
 				//YES
 				//FOOD NEARBY?
-				if (foo_closest != nullptr)
+				if (props.foo_closest != nullptr)
 				{
 					//YES
 					//AM I SICK?
-					if (virus)
+					if (props.bVirus)
 					{
 						state = WANDER;
 					}
@@ -502,7 +489,7 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 					state = WANDER;
 
 					//IF AGGRO, PREY NEARBY, VERY HUNGRY?
-					if (Aggro && org_tastiest != nullptr && HUNGRY)
+					if (props.bAggro && props.org_tastiest != nullptr && props.bHungry)
 					{
 						//YES
 						state = ATTACK;
@@ -521,20 +508,20 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 	//EATING
 	if (state == FOOD)
 	{
-		collideFactor = Collides(foo_closest->location, location, 2.f, radius);
+		collideFactor = Collides(props.foo_closest, this);
 
 		if (!eatFood(collideFactor, LL))
 		{
 			//EAT HERBO
-			if (!Aggro && !foo_closest->MEAT)
+			if (!props.bAggro && !props.foo_closest->bMeat)
 			{
-				GO_TO = foo_closest->location;
+				GO_TO = props.foo_closest->getLocation();
 			}
 
 			//EAT AGGRO
-			else if (Aggro && foo_closest->MEAT)
+			else if (props.bAggro && props.foo_closest->bMeat)
 			{
-				GO_TO = foo_closest->location;
+				GO_TO = props.foo_closest->getLocation();
 			}
 		}
 	}
@@ -542,55 +529,55 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 	//FLEEING
 	if (state == FLEE)
 	{
-		GO_TO = sf::Vector2f(location - (org_scariest->location - location));
+		GO_TO = sf::Vector2f(location - (props.org_scariest->getLocation() - location));
 	}
 
 	//DEFENDING
 	if (state == DEFEND)
 	{
-		collideFactor = Collides(org_weirdest->location, location, org_weirdest->radius, radius);
+		collideFactor = Collides(props.org_weirdest, this);
 
 		if (collideFactor > 0.0001f)
 		{
-			if (LIFESTAGE == 1)
+			if (props.nLifestage == 1)
 			{
-				org_weirdest->vitality -= attack;
-				org_weirdest->killed = true;
+				props.org_weirdest->props.fVitality -= props.fAttack;
+				props.org_weirdest->props.bKilled = true;
 			}
 			else
 			{
-				org_weirdest->vitality -= 0.3f*attack;
-				org_weirdest->killed = true;
+				props.org_weirdest->props.fVitality -= 0.3f* props.fAttack;
+				props.org_weirdest->props.bKilled = true;
 			}
 		}
 
-		float distance = 2.f*(radius+ org_weirdest->radius);
-		sf::Vector2f vec = sf::Vector2f(org_weirdest->location - location);
+		float distance = 2.f*(fRadius+ props.org_weirdest->getRadius());
+		sf::Vector2f vec = sf::Vector2f(props.org_weirdest->getLocation() - location);
 		float between = sqrt(vec.x*vec.x + vec.y*vec.y);
 
-		GO_TO = org_weirdest->location- vec * 1.1f;
+		GO_TO = props.org_weirdest->getLocation()- vec * 1.1f;
 	}
 
 	//PROTECTING
 	if (state == PROTECT)
 	{
-		collideFactor = Collides(org_scariest->location, location, org_scariest->radius, radius);
+		collideFactor = Collides(props.org_scariest, this);
 
 		if (collideFactor > 0.0001f)
 		{
-			if (LIFESTAGE == 1)
+			if (props.nLifestage == 1)
 			{
-				org_scariest->vitality -= attack;
-				org_scariest->killed = true;
+				props.org_scariest->props.fVitality -= props.fAttack;
+				props.org_scariest->props.bKilled = true;
 			}
 			else
 			{
-				org_scariest->vitality -= 0.3f*attack;
-				org_scariest->killed = true;
+				props.org_scariest->props.fVitality -= 0.3f* props.fAttack;
+				props.org_scariest->props.bKilled = true;
 			}
 		}
 
-		GO_TO = sf::Vector2f((org_scariest->location + org_youngest->location) / 2.f);
+		GO_TO = sf::Vector2f((props.org_scariest->getLocation() + props.org_youngest->getLocation()) / 2.f);
 	}
 
 	//ATTACKING
@@ -642,7 +629,7 @@ void Organism::AI(int me, linkedList** LL, float timeFactor)
 
 			if (happiness > 100)
 			{
-				NEXT_MATE = simVars->TIME + mateWait*timeFactor;
+				NEXT_MATE = settings->TIME + mateWait*timeFactor;
 				BREED = true;
 				energy *= 0.4f;
 				for (int n = 0; n < DNA_SIZE; n++)
@@ -722,7 +709,7 @@ void Organism::checkFoodVicinity(int x, int y, linkedList** LL)
 		///////////////////////////////////////////////////////////////////
 		if (Aggro)
 		{
-			for (foodIt = LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].meatFoodList.begin(); foodIt != LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].meatFoodList.end(); foodIt++)
+			for (foodIt = LL[int(location.y / settings->COLLIDE_SQUARE_SIZE + y)][int(location.x / settings->COLLIDE_SQUARE_SIZE) + x].meatFoodList.begin(); foodIt != LL[int(location.y / settings->COLLIDE_SQUARE_SIZE + y)][int(location.x / settings->COLLIDE_SQUARE_SIZE) + x].meatFoodList.end(); foodIt++)
 			{
 				if (vectorDistance((*foodIt)->location, location) < vision)
 				{
@@ -740,7 +727,7 @@ void Organism::checkFoodVicinity(int x, int y, linkedList** LL)
 		}
 		else
 		{
-			for (foodIt = LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].plantFoodList.begin(); foodIt != LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE + y)][int(location.x / simVars->COLLIDE_SQUARE_SIZE) + x].plantFoodList.end(); foodIt++)
+			for (foodIt = LL[int(location.y / settings->COLLIDE_SQUARE_SIZE + y)][int(location.x / settings->COLLIDE_SQUARE_SIZE) + x].plantFoodList.begin(); foodIt != LL[int(location.y / settings->COLLIDE_SQUARE_SIZE + y)][int(location.x / settings->COLLIDE_SQUARE_SIZE) + x].plantFoodList.end(); foodIt++)
 			{
 				if (vectorDistance((*foodIt)->location, location) < vision)
 				{
@@ -769,7 +756,7 @@ bool Organism::eatFood(float collideFactor, linkedList** LL)
 		{
 			if (!producer && !virus)
 			{
-				if (Aggro && foo_closest->MEAT)
+				if (Aggro && foo_closest->bMeat)
 				{
 					energy += foo_closest->value;
 					foo_closest->Eat(LL);
@@ -787,7 +774,7 @@ bool Organism::eatFood(float collideFactor, linkedList** LL)
 						circ.setOrigin(sf::Vector2f(radius*0.25f, radius*0.25f));
 					}
 				}
-				else if (!Aggro && !foo_closest->MEAT)
+				else if (!Aggro && !foo_closest->bMeat)
 				{
 					energy += foo_closest->value;
 					foo_closest->Eat(LL);
@@ -820,7 +807,7 @@ bool Organism::eatFood(float collideFactor, linkedList** LL)
 int Organism::similarityUpdate(Organism* other)
 {
 	int breedSum = breedDiff(other);
-	if (breedSum < simVars->BREED_BASE && breedSum <= maxBreed + 0.1f*DNA_SIZE && breedSum >= 0)
+	if (breedSum < settings->BREED_BASE && breedSum <= maxBreed + 0.1f*DNA_SIZE && breedSum >= 0)
 	{
 		maxBreed = breedSum + 0.1f*DNA_SIZE;
 	}
@@ -832,7 +819,7 @@ bool Organism::mateFac(Organism* other)
 {
 	int breedSum = breedDiff(other);
 
-	if (breedSum < simVars->BREED_BASE && breedSum <= maxBreed)
+	if (breedSum < settings->BREED_BASE && breedSum <= maxBreed)
 	{
 		return true;
 	}
@@ -849,7 +836,7 @@ bool Organism::attackFac(Organism* other)
 		breedSum += 0.5f*DNA_SIZE;
 	}
 
-	if (breedSum > simVars->BREED_BASE && breedSum > maxBreed)
+	if (breedSum > settings->BREED_BASE && breedSum > maxBreed)
 	{
 		return true;
 	}
@@ -871,7 +858,7 @@ bool Organism::scaryFac(Organism* other)
 		breedSum += 0.3f*DNA_SIZE;
 	}
 	
-	if (breedSum > simVars->BREED_BASE && breedSum > maxBreed)
+	if (breedSum > settings->BREED_BASE && breedSum > maxBreed)
 	{
 		return true;
 	}
@@ -1045,24 +1032,24 @@ void Organism::move(linkedList** LL, float timefactor)
 		nudge = 0.00007f;
 	}
 
-	if (location.x < simVars->Xbuff)
+	if (location.x < settings->Xbuff)
 	{
-		velocity.x += (simVars->Xbuff - location.x)*edge;
+		velocity.x += (settings->Xbuff - location.x)*edge;
 		edgeCase = true;
 	}
-	if (location.y < simVars->Ybuff)
+	if (location.y < settings->Ybuff)
 	{
-		velocity.y += (simVars->Ybuff - location.y)*edge;
+		velocity.y += (settings->Ybuff - location.y)*edge;
 		edgeCase = true;
 	}
-	if (location.x > simVars->WIDTH - simVars->Xbuff)
+	if (location.x > settings->WIDTH - settings->Xbuff)
 	{
-		velocity.x -= (simVars->Xbuff - (simVars->WIDTH - location.x))*edge;
+		velocity.x -= (settings->Xbuff - (settings->WIDTH - location.x))*edge;
 		edgeCase = true;
 	}
-	if (location.y > simVars->HEIGHT - simVars->Ybuff)
+	if (location.y > settings->HEIGHT - settings->Ybuff)
 	{
-		velocity.y -= (simVars->Ybuff - (simVars->HEIGHT - location.y))*edge;
+		velocity.y -= (settings->Ybuff - (settings->HEIGHT - location.y))*edge;
 		edgeCase = true;
 	}
 
@@ -1084,19 +1071,19 @@ void Organism::move(linkedList** LL, float timefactor)
 	{
 		newLoc.y = radius;
 	}
-	if (newLoc.x + radius > simVars->WIDTH)
+	if (newLoc.x + radius > settings->WIDTH)
 	{
-		newLoc.x = simVars->WIDTH - radius;
+		newLoc.x = settings->WIDTH - radius;
 	}
-	if (newLoc.y + radius > simVars->HEIGHT)
+	if (newLoc.y + radius > settings->HEIGHT)
 	{
-		newLoc.y = simVars->HEIGHT - radius;
+		newLoc.y = settings->HEIGHT - radius;
 	}
 
-	if (location.x / simVars->COLLIDE_SQUARE_SIZE != (newLoc.x) / simVars->COLLIDE_SQUARE_SIZE || location.y / simVars->COLLIDE_SQUARE_SIZE != (newLoc.y) / simVars->COLLIDE_SQUARE_SIZE)
+	if (location.x / settings->COLLIDE_SQUARE_SIZE != (newLoc.x) / settings->COLLIDE_SQUARE_SIZE || location.y / settings->COLLIDE_SQUARE_SIZE != (newLoc.y) / settings->COLLIDE_SQUARE_SIZE)
 	{
-		LL[int(location.y / simVars->COLLIDE_SQUARE_SIZE)][int(location.x / simVars->COLLIDE_SQUARE_SIZE)].remove(this);
-		LL[int(newLoc.y / simVars->COLLIDE_SQUARE_SIZE)][int(newLoc.x / simVars->COLLIDE_SQUARE_SIZE)].insert(this);
+		LL[int(location.y / settings->COLLIDE_SQUARE_SIZE)][int(location.x / settings->COLLIDE_SQUARE_SIZE)].remove(this);
+		LL[int(newLoc.y / settings->COLLIDE_SQUARE_SIZE)][int(newLoc.x / settings->COLLIDE_SQUARE_SIZE)].insert(this);
 	}
 
 	location = newLoc;
