@@ -2,7 +2,7 @@
 
 linkedList* LLfromArray(linkedList** LL, sf::Vector2f vec, Settings* settings, int nTileOffsetX, int nTileOffsetY)
 {
-	return &(LL[int(vec.y / settings->nCollisionSquareSize) + nTileOffsetY][int(vec.x / settings->nCollisionSquareSize) + nTileOffsetX]);
+	return &LL[int(vec.y / settings->nCollisionSquareSize + nTileOffsetY)][int(vec.x / settings->nCollisionSquareSize + nTileOffsetX)];
 }
 
 float vectorDistance(sf::Vector2f V1, sf::Vector2f V2)
@@ -47,12 +47,11 @@ float valFromDNA(int DNA[], float min, float max, float seed)
 	return abs(float(int(retVal) % int(max-min)) + min);
 }
 
-float Collides(sf::Vector2f p1, sf::Vector2f p2, float r1, float r2)
+float Collides(Collideable* c1, Collideable* c2)
 {
-	if (vectorDistance(p1, p2) < r1 + r2)
+	if (vectorDistance(c1->getLocation(), c2->getLocation()) < c1->getRadius() + c2->getRadius())
 	{
-		float m = (r1 + r2 - vectorDistance(p1, p2)) / (r1 + r2);
-		return m;
+		return (c1->getRadius() + c2->getRadius() - vectorDistance(c1->getLocation(), c2->getLocation())) / (c1->getRadius() + c2->getRadius());
 	}
 	return 0.0f;
 }
@@ -98,7 +97,7 @@ void initializesettings(int argc, char* argv[], Settings* settings)
 		options.add_options("Engine")
 			("x_buff", "Horizontal edge buffer", cxxopts::value<float>(settings->fXbuffer)->default_value("30"))
 			("y_buff", "Vertical edge buffer", cxxopts::value<float>(settings->fYbuffer)->default_value("30"))
-			("collision_square_size", "Side length of each hash-table collision square", cxxopts::value<int>(settings->nCollisionSquareSize)->default_value("100"))
+			("c,collision_square_size", "Side length of each hash-table collision square", cxxopts::value<int>(settings->nCollisionSquareSize)->default_value("100"))
 			("u,unlimited_framerate", "Unlock fame rate", cxxopts::value<bool>(settings->bUnlimitedFramerate))
 			;
 

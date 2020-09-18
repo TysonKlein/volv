@@ -48,6 +48,9 @@ struct Settings
 	bool bUnlimitedFramerate;
 };
 
+class Organism;
+class Food;
+
 struct OrganismProperties
 {
 	float fMaxSpeed, fEnergy, fMaxEnergy, fMaxVitality, fVitality, fHappiness, fMetabolism, fRotation, fBreed, fAttack, fRoamAngle, fImmunity, fScaredness, fHunger, fVision, fMatingCooldown;
@@ -64,9 +67,6 @@ struct OrganismProperties
 struct AIproperties
 {
 	void reset() {
-		dir = 0;
-		dir1 = 0;
-		dir2 = 0;
 		max = 0;
 		min = 0;
 		maxGoTo = 0;
@@ -76,7 +76,7 @@ struct AIproperties
 		bChangeDirection = false;
 		bFoundFood = false;
 	}
-	float dir, dir1, dir2, max, min, tempMax, tempMin, collideFactor, likeability, maxGoTo, distFac;
+	float max, min, tempMax, tempMin, collideFactor, likeability, maxGoTo, distFac;
 	int randChange, breedSum, diff, virusSum;
 	bool bChangeDirection;
 	bool bFoundFood;
@@ -95,9 +95,11 @@ public:
 	float getSpeed();
 
 	sf::Vector2f getLocation();
+	sf::Vector2f getVelocity();
 
 protected:
 	sf::Vector2f location;
+	sf::Vector2f velocity;
 	float fRadius, fDirection, fSpeed;
 	Settings* settings;
 };
@@ -192,6 +194,8 @@ public:
 	void Draw(sf::RenderWindow* window);
 
 	void displayCollisions(sf::RenderWindow* window);
+
+	sf::Vector2f getBreedLocation();
 
 	sf::CircleShape circ;
 	AI_STATES state = WANDER;

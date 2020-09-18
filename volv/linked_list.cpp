@@ -57,7 +57,7 @@ void linkedList::remove(Food* oldFood)
 }
 void linkedList::kill(Organism* oldOrg, linkedList** LL) //Kill a specific organism from a SEGMENT, spawn food in its place
 {
-	for (int i = 0; i < oldOrg->fMaxOrgValue[ORG_VALUES::VITALITY] *0.05f / (15 + 15 * int(oldOrg->virus) + oldOrg->DNA[2]); i++)
+	for (int i = 0; i < oldOrg->props.fMaxVitality *0.05f / (15 + 15 * int(oldOrg->props.bVirus) + oldOrg->props.DNA[2]); i++)
 	{
 		sf::Vector2f pos = oldOrg->getLocation();
 
@@ -65,9 +65,9 @@ void linkedList::kill(Organism* oldOrg, linkedList** LL) //Kill a specific organ
 		pos.y += float(rand() % 100) / 50.0f*oldOrg->getRadius() - oldOrg->getRadius();
 		pos = buffer(pos, settings);
 
-		Food* food = new Food(pos, settings, oldOrg->killed || rand() % 8 == 0);
+		Food* food = new Food(pos, settings, oldOrg->props.bKilled || rand() % 8 == 0);
 
-		LLfromArray(LL, pos, settings, 0, 0)->insert(food);	
+ 		LLfromArray(LL, pos, settings, 0, 0)->insert(food);	
 	}
 	if (LLfromArray(LL, oldOrg->getLocation(), settings, 0, 0)->remove(oldOrg))
 	{
@@ -82,7 +82,7 @@ void linkedList::breed(Organism* oldOrg, linkedList** LL)
 
 	for (int i = 0; i < DNA_SIZE; i++)
 	{
-		tot += int(oldOrg->DNA[i] != oldOrg->breedDNA[i]);
+		tot += int(oldOrg->props.DNA[i] != oldOrg->props.breedDNA[i]);
 	}
 
 	for (int i = 0; i < DNA_SIZE; i++)
@@ -112,22 +112,22 @@ void linkedList::breed(Organism* oldOrg, linkedList** LL)
 		}
 		else if (a > b)
 		{
-			newDNA[i] = oldOrg->DNA[i];
+			newDNA[i] = oldOrg->props.DNA[i];
 		}
 		else
 		{
-			newDNA[i] = oldOrg->breedDNA[i];
+			newDNA[i] = oldOrg->props.breedDNA[i];
 		}
 	}
 
 	int parentA = 0, parentB = 0;
 	for (int i = 0; i < DNA_SIZE; i++)
 	{
-		if (oldOrg->DNA[i] != newDNA[i])
+		if (oldOrg->props.DNA[i] != newDNA[i])
 		{
 			parentA++;
 		}
-		if (oldOrg->breedDNA[i] != newDNA[i])
+		if (oldOrg->props.breedDNA[i] != newDNA[i])
 		{
 			parentB++;
 		}
@@ -137,28 +137,28 @@ void linkedList::breed(Organism* oldOrg, linkedList** LL)
 		parentA = parentB;
 	}
 
-	oldOrg->BREED = false;
+	oldOrg->props.bBreed = false;
 
-	Organism* org = new Organism(sf::Vector2f((oldOrg->breedLoc.x + oldOrg->location.x) / 2.f, (oldOrg->breedLoc.y + oldOrg->location.y) / 2.f), newDNA, settings);
-	org->maxBreed = parentA;
-	org->generation = oldOrg->generation + 1;
-	LL[int(org->location.y / settings->COLLIDE_SQUARE_SIZE)][int(org->location.x / settings->COLLIDE_SQUARE_SIZE)].insert(org);
+	Organism* org = new Organism(sf::Vector2f((oldOrg->getBreedLocation().x + oldOrg->getLocation().x) / 2.f, (oldOrg->getBreedLocation().y + oldOrg->getLocation().y) / 2.f), newDNA, settings);
+	org->props.nMaxBreedingDifference = parentA;
+	org->props.nGeneration = oldOrg->props.nGeneration + 1;
+	LL[int(org->getLocation().y / settings->nCollisionSquareSize)][int(org->getLocation().x / settings->nCollisionSquareSize)].insert(org);
 	drawList->insert(org);
 }
 
 void linkedList::draw(sf::RenderWindow * window)
 {
-	window->draw(rect);
+	window->draw(LLrect);
 }
 void linkedList::drawFood(sf::RenderWindow * window)
 {
-	for (it = meatFoodList.begin(); it != meatFoodList.end(); it++)
+	for (foodIt = meatFoodList.begin(); foodIt != meatFoodList.end(); foodIt++)
 	{
-		(*it)->Draw(window);
+		(*foodIt)->Draw(window);
 	}
-	for (it = plantFoodList.begin(); it != plantFoodList.end(); it++)
+	for (foodIt = plantFoodList.begin(); foodIt != plantFoodList.end(); foodIt++)
 	{
-		(*it)->Draw(window);
+		(*foodIt)->Draw(window);
 	}
 }
 void linkedList::drawBarrier(sf::RenderWindow * window)
@@ -173,7 +173,7 @@ void linkedList::drawOrganisms(sf::RenderWindow * window)
 	for (std::vector<Organism*>::iterator it = organismList.begin(); it != organismList.end(); it++)
 	{
 		(*it)->Draw(window);
-		if (settings->DEVMODE)
+		if (settings->bDevmode)
 			(*it)->displayCollisions(window);
 	}
 }

@@ -32,3 +32,8 @@ sf::Vector2f Collideable::getLocation()
 {
 	return location;
 }
+
+sf::Vector2f Collideable::getVelocity()
+{
+	return velocity;
+}
