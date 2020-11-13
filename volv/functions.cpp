@@ -87,7 +87,7 @@ void initializesettings(int argc, char* argv[], Settings* settings)
 	settings->nTime = 0;
 
 	//Parsing the command line options using cxxopts
-	cxxopts::Options options("volv", "Evolution simulator");
+	cxxopts::Options options("volv", "Evolutionary algorithm simulator");
 
 	try {
 		options
@@ -103,26 +103,29 @@ void initializesettings(int argc, char* argv[], Settings* settings)
 
 		options.add_options("Display")
 			("f,fullscreen", "Fullscreen mode", cxxopts::value<bool>(settings->bFullscreen))
-			("d,developer_mode", "Toggle developer mode - shows AI decision making and ", cxxopts::value<bool>(settings->bDevmode))
+			("d,developer_mode", "Toggle developer mode - shows AI decision making and desired direction of travel", cxxopts::value<bool>(settings->bDevmode))
 			;
 
 		options.add_options("Simulation")
 			("y,height", "Simulaton Height", cxxopts::value<int>(settings->nHeight)->default_value("1500"))
 			("x,width", "Simulaton Width", cxxopts::value<int>(settings->nWidth)->default_value("1800"))
 			("n,number_organisms", "Number of unique organisms to start simulation", cxxopts::value<int>(settings->nInitialNumberOfOrganisms)->default_value("100"))
-			("s,seed", "Seeded simulation, random seed if not", cxxopts::value<int>(settings->nSeed)->default_value(std::to_string(static_cast<unsigned int>(std::time(NULL)))))
+			("s,seed", "Simulation seed, random seed if not specified", cxxopts::value<int>(settings->nSeed)->default_value(std::to_string(static_cast<unsigned int>(std::time(NULL)))))
 			("food_density", "Food spawn density", cxxopts::value<int>(settings->nFoodSpawnRate)->default_value("15"))
 			;
 
 		options.add_options() //Other options
-			("h, help", "Print help")
+			("h,help", "Print help")
 			;
 
 		auto result = options.parse(argc, argv);
 
 		//If help is selected, do not continue to run the program and simply display the help text
 		if (result.count("help")) {
-			std::cout << options.help({}) << std::endl;
+			std::ofstream myfile;
+			myfile.open("help.txt");
+			myfile << options.help({}) << std::endl;
+			myfile.close();
 			exit(0);
 		}
 	}

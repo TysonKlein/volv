@@ -13,13 +13,14 @@
 #include <SFML/Window.hpp>
 
 //CXXOPTS
+#include <iostream>
+#include <fstream>
 #include "cxxopts.hpp"
+#include <cstdlib>
 
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <ctime>
-#include <cstdlib>
-#include <iostream>
 
 ////////////////////////////////////////////////////////////
 //Globals

@@ -7,7 +7,6 @@ int main(int argc, char* argv[])
 	initializesettings(argc, argv, &settings);
 	
 	std::srand(settings.nSeed);
-
 	sf::Font font;
 	font.loadFromFile("res/dpcomic.ttf");
 	sf::Text timerTxt;
@@ -162,7 +161,7 @@ int main(int argc, char* argv[])
 					DNA[i] = rand() % DNA_SIZE;
 					if (i == DNA_SIZE-1)
 					{
-						DNA[i] = 0;
+						DNA[i] = (rand() % (DNA_SIZE - 1)) + 1;
 					}
 				}
 				org = new Organism(sf::Vector2f(sf::Mouse::getPosition(window).x*settings.nHeight / gameHeight, sf::Mouse::getPosition(window).y*settings.nHeight / gameHeight), DNA, &settings);
