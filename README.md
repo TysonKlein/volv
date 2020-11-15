@@ -46,12 +46,12 @@ Lifespan | The maximum lifespan of the organism, proportional to size and invers
 Vision | How far the organism can see around it, for both food and other organisms
 Diet | Whether the organism is a herbivore or carnivore
 
-**volv** is in development. The [current working build](https://github.com/TysonKlein/volv/blob/master/bin/volv.exe) can be found as an executable in the 'bin' folder. **volv** has simple controls while the simulation is running:
-**Press 'u' to toggle unlocked framerate mode**
-**Press Space to toggle developer mode, showing AI decisions (coloured line on each organism) and collision has squares**
-**Left Click to spawn a new random organism**
-**Right Click to spawn a barrier**
-**Press esc to end the simulation**
+**volv** is in development. The [current working build](https://github.com/TysonKlein/volv/blob/master/bin/volv.exe) can be found as an executable in the 'bin' folder. **volv** has simple controls while the simulation is running:  
+**Press 'u' to toggle unlocked framerate mode**  
+**Press Space to toggle developer mode, showing AI decisions (coloured line on each organism) and collision has squares**  
+**Left Click to spawn a new random organism**  
+**Right Click to spawn a barrier**  
+**Press esc to end the simulation**  
 
 To run **volv**, download the current working build and simply run it for default settings. You can also run it with CMD with the following code for a simulation with the same default settings:
 ```
