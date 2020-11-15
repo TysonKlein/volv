@@ -6,28 +6,28 @@
 
 These are organisms in volv. Each organism is uniquely defined by a strand of DNA, or a set of 'genes' belonging to each organism that determine every trait for an individual. Here is one such organism, recently born, looking for food.
 
-![Youth](https://github.com/TysonKlein/volv/blob/master/Readme/org1youth.png)
+![Youth](https://github.com/TysonKlein/volv/blob/master/Readme/org1youth.PNG)
 
 This organism has colors, size, shape, and movement patterns defined by some unique combination of various 'genes' in it's DNA. Each organism has 100 genes, and some distinct combination of these genes determine everything about this organism. Some genes are more important than others and may contribute to size, speed, and a certain color, while others may not matter at all.
 
 If this organism survives long enough, it matures to become an adult. When an organism becomes an adult it becomes larger and develops different colors. It also requires more food (small white squares) to survive. If this adult organism is able to remain well fed and find another adult with similar DNA, they can mate to create offspring.
 
-![Adult with Food](https://github.com/TysonKlein/volv/blob/master/Readme/org1adult.png)
+![Adult with Food](https://github.com/TysonKlein/volv/blob/master/Readme/org1adult.PNG)
 
 Offspring are generated when 2 adult organisms mate, and have DNA dictated by a combination of each of their parents and some random mutation. Just like in real life, if the parents have very similar DNA the offspring will have more mutations.
 This system of mating produces unique species, and organisms born from similar parents will look for members of their same species to mate with when they become adults. Below is a section of **volv** with 2 distinct species: the green pentagons and the smaller light green triangles.
 
-![2 species](https://github.com/TysonKlein/volv/blob/master/Readme/2species.png)
+![2 species](https://github.com/TysonKlein/volv/blob/master/Readme/2species.PNG)
 
 These species will tend to stick together; young organisms will follow adults of their species, adults will protect their young from competing species and predators, and species will try to avoid organisms of other species.
 
 Carnivorous species can also develop, requiring different food from their herbivorous counterparts (eating larger red squares that spawn only from dead organisms). These species can be spotted by their non-equal sided shape, unlike the simple polygons of the herbivorous organisms. Below we can see a herbivorous square species and a carnivorous purple species.
 
-![herbivore and carnivore](https://github.com/TysonKlein/volv/blob/master/Readme/herb and carn.png)
+![herbivore and carnivore](https://github.com/TysonKlein/volv/blob/master/Readme/herb and carn.PNG)
 
 Organisms can randomly become sick with a virus when they eat. Some organisms get sick more easily than others, and this virus is shown as a colourful dot in the middle of the organism. The virus is guaranteed to kill the organism, and if the sick organism comes in contact with a healthy one, there is a chance the virus will be passed on. The more similar the DNA is between the organisms, the more likely the virus will be passed on. This makes diseases spread quickly through single species but not so easily between species, just like in real life. Some organisms are able to detect when a neighbour is sick and try to flee. Below we can see a virus spreading through many similar organisms.
 
-![virus](https://github.com/TysonKlein/volv/blob/master/Readme/virus.png)
+![virus](https://github.com/TysonKlein/volv/blob/master/Readme/virus.PNG)
 
 Each organism has the following traits determined by DNA:
 
